@@ -2,9 +2,7 @@
 //!
 //! These mirror the Python test suite, ensuring behavioral parity.
 
-use conservation_enforcer::{
-    assemble, policies, ConservationEnforcer, EnforcementResult, FluxVM, Op, VmError,
-};
+use conservation_enforcer::{assemble, policies, ConservationEnforcer, FluxVM, Op, VmError};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // VM Arithmetic

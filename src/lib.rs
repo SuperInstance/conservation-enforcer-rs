@@ -203,13 +203,12 @@ impl RegisterFile {
 
     #[inline]
     pub fn set(&mut self, idx: usize, val: u32) {
-        let v = val & 0xFFFFFFFF;
-        self.r[idx] = v;
-        self.flag_zero = v == 0;
-        // interpret as signed
-        let signed = if v >= 0x80000000 { v as i32 } else { v as i32 };
-        // Note: u32 → i32 wrap; in Rust `v as i32` does the wrap for us.
-        self.flag_sign = signed < 0;
+        self.r[idx] = val;
+        self.flag_zero = val == 0;
+        // Reinterpret the bits as signed to set the sign flag. `val as i32`
+        // performs the wrapping reinterpretation we want for both halves of
+        // the range, so no conditional is needed.
+        self.flag_sign = (val as i32) < 0;
     }
 }
 
@@ -956,6 +955,7 @@ impl ConservationEnforcer {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /// Simple FNV-1a hash for audit logging (privacy-preserving, non-cryptographic).
+#[cfg(feature = "audit")]
 fn simple_hash(s: &str) -> u64 {
     let mut hash: u64 = 0xcbf29ce484222325;
     for byte in s.bytes() {
@@ -1013,7 +1013,7 @@ fn days_to_date(days: u64) -> (u64, u64, u64) {
 
 #[cfg(feature = "audit")]
 fn is_leap(year: u64) -> bool {
-    (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+    (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400)
 }
 
 #[cfg(feature = "audit")]
@@ -1082,10 +1082,7 @@ pub mod assembler {
             }
 
             // Label?
-            let text = match parse_label(&text, &mut labels, &raw, line_num) {
-                Ok(remaining) => remaining,
-                Err(e) => return Err(e),
-            };
+            let text = parse_label(&text, &mut labels, &raw, line_num)?;
             if text.is_empty() {
                 continue;
             }
@@ -1336,7 +1333,7 @@ pub mod assembler {
             let label = label_part.to_string();
             // Check for duplicates
             if labels.iter().any(|(l, _)| l == &label) {
-                return Err(format!("Duplicate label '{label}'"));
+                return Err(format!("Line {}: duplicate label '{label}'", line_num + 1));
             }
             labels.push((label, raw.len()));
             let remaining = text[colon_pos + 1..].trim();
@@ -1494,12 +1491,11 @@ block:
         let mut add_lines = String::new();
         if max_expansion >= 2 {
             add_lines.push_str("IADD R6, R4, R4\n"); // 2×
-            for i in 3..=max_expansion {
-                add_lines.push_str(&format!("IADD R6, R6, R4\n")); // i×
-                let _ = i; // suppress unused warning
+            for _ in 3..=max_expansion {
+                add_lines.push_str("IADD R6, R6, R4\n");
             }
         } else {
-            // max_expansion = 1: just copy
+            // max_expansion <= 1: just copy
             add_lines.push_str("MOV R6, R4\n");
         }
 
