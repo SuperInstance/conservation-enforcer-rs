@@ -2,7 +2,7 @@
 
 ![Crates.io](https://img.shields.io/crates/v/si-conservation-enforcer)
 ![Rust](https://img.shields.io/badge/rust-stable-orange)
-![Tests](https://img.shields.io/badge/tests-95%2B-brightgreen)
+![Tests](https://img.shields.io/badge/tests-150%2B-brightgreen)
 ![License](https://img.shields.io/github/license/SuperInstance/conservation-enforcer-rs)
 
 **FLUX bytecode conservation-law enforcement for LLM outputs — Rust implementation.**
@@ -21,10 +21,17 @@ The FLUX bytecode acts as a deterministic, auditable policy layer. **You can't l
 ## Why Rust?
 
 - **Zero-cost abstractions** — The entire VM, assembler, and enforcement layer adds negligible overhead
-- **No_std compatible** — Works in embedded, WASM, and kernel contexts (use `default-features = false`)
+- **WASM-ready** — Builds unmodified for `wasm32-unknown-unknown` with the default `std` feature
 - **No external dependencies** — The entire crate is self-contained
 - **Memory safe** — Rust's ownership model guarantees no UB in the policy VM
 - **Deterministic** — Same input + bytecode = same output, every time
+
+> **`no_std` status:** The crate is annotated with `#![cfg_attr(not(feature = "std"), no_std)]`
+> and has scaffolding for a `no_std`/embedded port, but building with
+> `--no-default-features` does **not** currently compile (the implementation uses
+> `String`/`Vec`/`format!` and `std::collections::HashMap`). Treat `no_std`/embedded
+> support as a stated goal, not a working configuration. The `wasm32-unknown-unknown`
+> target (with `std`) is supported.
 
 ## Installation
 
@@ -240,11 +247,15 @@ fn main() {
 | `audit` | ❌ | JSON Lines audit logging to files |
 | `metrics` | ❌ | Metrics collection and export |
 
-For `no_std` environments:
-```toml
-[dependencies]
-si-conservation-enforcer = { version = "0.1", default-features = false }
-```
+> **Note:** A `no_std`/embedded build (`default-features = false`) is a stated
+> goal but does **not** currently compile (see `no_std` status above). The
+> snippet below is the intended usage once that port lands; it is not functional today.
+>
+> ```toml
+> [dependencies]
+> # Not yet working — requires the unfinished no_std port.
+> si-conservation-enforcer = { version = "0.1", default-features = false }
+> ```
 
 ## Cross-Implementation
 
@@ -256,7 +267,13 @@ Both implement the same specification. Choose based on your runtime.
 
 ### Detailed Comparison
 
-This crate is a line-by-line port of the [Python conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer) v0.2.0. The Python version's test suite (95 tests) has been replicated in Rust. The bytecode produced by the assembler is binary-compatible — you can assemble a policy in Python and execute it in Rust, and vice versa.
+This crate is a Rust implementation of the same FLUX ISA and policy
+semantics as the [Python conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer).
+It is **not** a verified line-by-line port: the two implementations are maintained
+independently, this Rust suite is its own test suite (not a replication of the
+Python suite), and cross-implementation bytecode compatibility is a design goal
+that is **not** currently verified by CI or tests. Treat the table below as a
+component mapping, not a parity guarantee.
 
 | Component | Python | Rust |
 |-----------|--------|------|
@@ -273,7 +290,7 @@ src/
 └── lib.rs          Entire crate (VM, assembler, enforcer, policies, audit, metrics)
 
 tests/
-└── integration.rs  Comprehensive test suite (95+ tests)
+└── integration.rs  Integration test suite (~80 tests; 150+ tests total with unit + doc tests)
 ```
 
 ## Ecosystem
