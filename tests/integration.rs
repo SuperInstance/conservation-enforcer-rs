@@ -3,8 +3,7 @@
 //! These mirror the Python test suite, ensuring behavioral parity.
 
 use conservation_enforcer::{
-    assemble, ConservationEnforcer, EnforcementResult, FluxVM, Op, VmError,
-    policies,
+    assemble, policies, ConservationEnforcer, EnforcementResult, FluxVM, Op, VmError,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -13,7 +12,21 @@ use conservation_enforcer::{
 
 #[test]
 fn vm_add() {
-    let code = vec![Op::Movi as u8, 0, 10, 0, Op::Movi as u8, 1, 20, 0, Op::Iadd as u8, 2, 0, 1, Op::Halt as u8];
+    let code = vec![
+        Op::Movi as u8,
+        0,
+        10,
+        0,
+        Op::Movi as u8,
+        1,
+        20,
+        0,
+        Op::Iadd as u8,
+        2,
+        0,
+        1,
+        Op::Halt as u8,
+    ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 30);
@@ -21,7 +34,21 @@ fn vm_add() {
 
 #[test]
 fn vm_sub() {
-    let code = vec![Op::Movi as u8, 0, 50, 0, Op::Movi as u8, 1, 20, 0, Op::Isub as u8, 2, 0, 1, Op::Halt as u8];
+    let code = vec![
+        Op::Movi as u8,
+        0,
+        50,
+        0,
+        Op::Movi as u8,
+        1,
+        20,
+        0,
+        Op::Isub as u8,
+        2,
+        0,
+        1,
+        Op::Halt as u8,
+    ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 30);
@@ -29,7 +56,21 @@ fn vm_sub() {
 
 #[test]
 fn vm_mul() {
-    let code = vec![Op::Movi as u8, 0, 7, 0, Op::Movi as u8, 1, 6, 0, Op::Imul as u8, 2, 0, 1, Op::Halt as u8];
+    let code = vec![
+        Op::Movi as u8,
+        0,
+        7,
+        0,
+        Op::Movi as u8,
+        1,
+        6,
+        0,
+        Op::Imul as u8,
+        2,
+        0,
+        1,
+        Op::Halt as u8,
+    ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 42);
@@ -37,7 +78,21 @@ fn vm_mul() {
 
 #[test]
 fn vm_div() {
-    let code = vec![Op::Movi as u8, 0, 100, 0, Op::Movi as u8, 1, 5, 0, Op::Idiv as u8, 2, 0, 1, Op::Halt as u8];
+    let code = vec![
+        Op::Movi as u8,
+        0,
+        100,
+        0,
+        Op::Movi as u8,
+        1,
+        5,
+        0,
+        Op::Idiv as u8,
+        2,
+        0,
+        1,
+        Op::Halt as u8,
+    ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 20);
@@ -45,14 +100,42 @@ fn vm_div() {
 
 #[test]
 fn vm_div_by_zero() {
-    let code = vec![Op::Movi as u8, 0, 10, 0, Op::Movi as u8, 1, 0, 0, Op::Idiv as u8, 2, 0, 1, Op::Halt as u8];
+    let code = vec![
+        Op::Movi as u8,
+        0,
+        10,
+        0,
+        Op::Movi as u8,
+        1,
+        0,
+        0,
+        Op::Idiv as u8,
+        2,
+        0,
+        1,
+        Op::Halt as u8,
+    ];
     let mut vm = FluxVM::new();
     assert_eq!(vm.run(&code), Err(VmError::DivisionByZero));
 }
 
 #[test]
 fn vm_mod() {
-    let code = vec![Op::Movi as u8, 0, 17, 0, Op::Movi as u8, 1, 5, 0, Op::Imod as u8, 2, 0, 1, Op::Halt as u8];
+    let code = vec![
+        Op::Movi as u8,
+        0,
+        17,
+        0,
+        Op::Movi as u8,
+        1,
+        5,
+        0,
+        Op::Imod as u8,
+        2,
+        0,
+        1,
+        Op::Halt as u8,
+    ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 2);
@@ -65,9 +148,26 @@ fn vm_mod() {
 #[test]
 fn vm_je_taken() {
     let code = vec![
-        Op::Movi as u8, 0, 5, 0, Op::Movi as u8, 1, 5, 0,
-        Op::Cmp as u8, 0, 1, Op::Je as u8, 0, 4, 0,
-        Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+        Op::Movi as u8,
+        0,
+        5,
+        0,
+        Op::Movi as u8,
+        1,
+        5,
+        0,
+        Op::Cmp as u8,
+        0,
+        1,
+        Op::Je as u8,
+        0,
+        4,
+        0,
+        Op::Movi as u8,
+        0,
+        99,
+        0,
+        Op::Halt as u8,
     ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
@@ -77,9 +177,26 @@ fn vm_je_taken() {
 #[test]
 fn vm_jne_taken() {
     let code = vec![
-        Op::Movi as u8, 0, 5, 0, Op::Movi as u8, 1, 3, 0,
-        Op::Cmp as u8, 0, 1, Op::Jne as u8, 0, 4, 0,
-        Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+        Op::Movi as u8,
+        0,
+        5,
+        0,
+        Op::Movi as u8,
+        1,
+        3,
+        0,
+        Op::Cmp as u8,
+        0,
+        1,
+        Op::Jne as u8,
+        0,
+        4,
+        0,
+        Op::Movi as u8,
+        0,
+        99,
+        0,
+        Op::Halt as u8,
     ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
@@ -89,9 +206,26 @@ fn vm_jne_taken() {
 #[test]
 fn vm_jsge_greater() {
     let code = vec![
-        Op::Movi as u8, 0, 10, 0, Op::Movi as u8, 1, 5, 0,
-        Op::Cmp as u8, 0, 1, Op::Jsge as u8, 0, 4, 0,
-        Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+        Op::Movi as u8,
+        0,
+        10,
+        0,
+        Op::Movi as u8,
+        1,
+        5,
+        0,
+        Op::Cmp as u8,
+        0,
+        1,
+        Op::Jsge as u8,
+        0,
+        4,
+        0,
+        Op::Movi as u8,
+        0,
+        99,
+        0,
+        Op::Halt as u8,
     ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
@@ -101,9 +235,26 @@ fn vm_jsge_greater() {
 #[test]
 fn vm_jsge_less_no_jump() {
     let code = vec![
-        Op::Movi as u8, 0, 3, 0, Op::Movi as u8, 1, 5, 0,
-        Op::Cmp as u8, 0, 1, Op::Jsge as u8, 0, 4, 0,
-        Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+        Op::Movi as u8,
+        0,
+        3,
+        0,
+        Op::Movi as u8,
+        1,
+        5,
+        0,
+        Op::Cmp as u8,
+        0,
+        1,
+        Op::Jsge as u8,
+        0,
+        4,
+        0,
+        Op::Movi as u8,
+        0,
+        99,
+        0,
+        Op::Halt as u8,
     ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
@@ -113,9 +264,26 @@ fn vm_jsge_less_no_jump() {
 #[test]
 fn vm_jslt_less() {
     let code = vec![
-        Op::Movi as u8, 0, 3, 0, Op::Movi as u8, 1, 8, 0,
-        Op::Cmp as u8, 0, 1, Op::Jslt as u8, 0, 4, 0,
-        Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+        Op::Movi as u8,
+        0,
+        3,
+        0,
+        Op::Movi as u8,
+        1,
+        8,
+        0,
+        Op::Cmp as u8,
+        0,
+        1,
+        Op::Jslt as u8,
+        0,
+        4,
+        0,
+        Op::Movi as u8,
+        0,
+        99,
+        0,
+        Op::Halt as u8,
     ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
@@ -125,9 +293,26 @@ fn vm_jslt_less() {
 #[test]
 fn vm_jslt_greater_no_jump() {
     let code = vec![
-        Op::Movi as u8, 0, 10, 0, Op::Movi as u8, 1, 3, 0,
-        Op::Cmp as u8, 0, 1, Op::Jslt as u8, 0, 4, 0,
-        Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+        Op::Movi as u8,
+        0,
+        10,
+        0,
+        Op::Movi as u8,
+        1,
+        3,
+        0,
+        Op::Cmp as u8,
+        0,
+        1,
+        Op::Jslt as u8,
+        0,
+        4,
+        0,
+        Op::Movi as u8,
+        0,
+        99,
+        0,
+        Op::Halt as u8,
     ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
@@ -195,14 +380,24 @@ fn syscall_unique_ratio() {
 #[test]
 fn syscall_violation_flag() {
     let code = vec![
-        Op::Movi as u8, 1, 2, 0,
-        Op::Movi as u8, 0, 8, 0, Op::Syscall as u8,
+        Op::Movi as u8,
+        1,
+        2,
+        0,
+        Op::Movi as u8,
+        0,
+        8,
+        0,
+        Op::Syscall as u8,
         Op::Halt as u8,
     ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert!(vm.violated());
-    assert!(vm.violation_reason_str().to_lowercase().contains("repetition"));
+    assert!(vm
+        .violation_reason_str()
+        .to_lowercase()
+        .contains("repetition"));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -212,8 +407,19 @@ fn syscall_violation_flag() {
 #[test]
 fn stack_push_pop() {
     let code = vec![
-        Op::Movi as u8, 0, 42, 0, Op::Push as u8, 0,
-        Op::Movi as u8, 0, 0, 0, Op::Pop as u8, 1, Op::Halt as u8,
+        Op::Movi as u8,
+        0,
+        42,
+        0,
+        Op::Push as u8,
+        0,
+        Op::Movi as u8,
+        0,
+        0,
+        0,
+        Op::Pop as u8,
+        1,
+        Op::Halt as u8,
     ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
@@ -223,8 +429,17 @@ fn stack_push_pop() {
 #[test]
 fn stack_inc_dec() {
     let code = vec![
-        Op::Movi as u8, 0, 5, 0, Op::Inc as u8, 0,
-        Op::Inc as u8, 0, Op::Dec as u8, 0, Op::Halt as u8,
+        Op::Movi as u8,
+        0,
+        5,
+        0,
+        Op::Inc as u8,
+        0,
+        Op::Inc as u8,
+        0,
+        Op::Dec as u8,
+        0,
+        Op::Halt as u8,
     ];
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
@@ -253,7 +468,8 @@ fn length_blocks_long_output() {
 #[test]
 fn length_correction_message() {
     let mut e = ConservationEnforcer::with_options(
-        policies::length_budget_policy(3), 3,
+        policies::length_budget_policy(3),
+        3,
         Some("🚫 Blocked: {reason}"),
     );
     let result = e.enforce("Q", "This is a very long response that exceeds budget");
@@ -280,7 +496,12 @@ fn repetition_blocks_repetitive() {
     let mut e = ConservationEnforcer::new(policies::repetition_policy(300), 1000);
     let result = e.enforce("Summarize", "the the the the the the the the the the");
     assert!(!result.allowed);
-    assert!(result.violation.unwrap().reason.to_lowercase().contains("repetition"));
+    assert!(result
+        .violation
+        .unwrap()
+        .reason
+        .to_lowercase()
+        .contains("repetition"));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -305,7 +526,12 @@ fn category_blocks_off_topic() {
         "banana apple orange grape melon",
     );
     assert!(!result.allowed);
-    assert!(result.violation.unwrap().reason.to_lowercase().contains("category"));
+    assert!(result
+        .violation
+        .unwrap()
+        .reason
+        .to_lowercase()
+        .contains("category"));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -327,7 +553,12 @@ fn entropy_blocks_low() {
     let mut e = ConservationEnforcer::new(policies::entropy_policy(2500), 1000);
     let result = e.enforce("Write a poem", "go go go go go go go go go go");
     assert!(!result.allowed);
-    assert!(result.violation.unwrap().reason.to_lowercase().contains("entropy"));
+    assert!(result
+        .violation
+        .unwrap()
+        .reason
+        .to_lowercase()
+        .contains("entropy"));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -366,7 +597,12 @@ fn combined_blocks_repetition() {
         "beautiful beautiful beautiful beautiful beautiful beautiful beautiful",
     );
     assert!(!result.allowed);
-    assert!(result.violation.unwrap().reason.to_lowercase().contains("repetition"));
+    assert!(result
+        .violation
+        .unwrap()
+        .reason
+        .to_lowercase()
+        .contains("repetition"));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -386,12 +622,14 @@ fn density_allows_high() {
 #[test]
 fn density_blocks_low() {
     let mut e = ConservationEnforcer::new(policies::information_density_policy(500), 1000);
-    let result = e.enforce(
-        "Write a poem",
-        "go go go go go go go go go go",
-    );
+    let result = e.enforce("Write a poem", "go go go go go go go go go go");
     assert!(!result.allowed);
-    assert!(result.violation.unwrap().reason.to_lowercase().contains("density"));
+    assert!(result
+        .violation
+        .unwrap()
+        .reason
+        .to_lowercase()
+        .contains("density"));
 }
 
 #[test]
@@ -424,7 +662,12 @@ fn scope_blocks_off_topic() {
         "banana apple orange grape melon fruit",
     );
     assert!(!result.allowed);
-    assert!(result.violation.unwrap().reason.to_lowercase().contains("scope"));
+    assert!(result
+        .violation
+        .unwrap()
+        .reason
+        .to_lowercase()
+        .contains("scope"));
 }
 
 #[test]
@@ -432,7 +675,12 @@ fn scope_blocks_excessive_expansion() {
     let mut e = ConservationEnforcer::new(policies::scope_discipline_policy(0, 10), 1000);
     let result = e.enforce("hi", &"hello ".repeat(100));
     assert!(!result.allowed);
-    assert!(result.violation.unwrap().reason.to_lowercase().contains("scope"));
+    assert!(result
+        .violation
+        .unwrap()
+        .reason
+        .to_lowercase()
+        .contains("scope"));
 }
 
 #[test]
@@ -488,10 +736,7 @@ fn decay_blocks_max_calls() {
 
 #[test]
 fn budget_syncs_after_decay() {
-    let mut e = ConservationEnforcer::new(
-        policies::budget_decay_policy(50, 5, 100),
-        500,
-    );
+    let mut e = ConservationEnforcer::new(policies::budget_decay_policy(50, 5, 100), 500);
     e.enforce("q", "a response here");
     assert_eq!(e.remaining_budget(), 450);
 }
@@ -586,9 +831,7 @@ fn enforce_with_llm_wraps_call() {
 
 #[test]
 fn asm_je_label() {
-    let code = assemble(
-        "MOVI R0, 0\nCMP R0, R0\nJE done\nMOVI R0, 99\ndone:\nHALT",
-    ).unwrap();
+    let code = assemble("MOVI R0, 0\nCMP R0, R0\nJE done\nMOVI R0, 99\ndone:\nHALT").unwrap();
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(0), 0);
@@ -596,9 +839,7 @@ fn asm_je_label() {
 
 #[test]
 fn asm_jmp_label() {
-    let code = assemble(
-        "MOVI R0, 1\nJMP skip\nMOVI R0, 99\nskip:\nMOVI R0, 42\nHALT",
-    ).unwrap();
+    let code = assemble("MOVI R0, 1\nJMP skip\nMOVI R0, 99\nskip:\nMOVI R0, 42\nHALT").unwrap();
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(0), 42);
@@ -608,7 +849,8 @@ fn asm_jmp_label() {
 fn asm_jge_taken_greater() {
     let code = assemble(
         "MOVI R0, 10\nMOVI R1, 5\nJGE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
-    ).unwrap();
+    )
+    .unwrap();
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 1);
@@ -618,7 +860,8 @@ fn asm_jge_taken_greater() {
 fn asm_jge_taken_equal() {
     let code = assemble(
         "MOVI R0, 5\nMOVI R1, 5\nJGE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
-    ).unwrap();
+    )
+    .unwrap();
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 1);
@@ -628,7 +871,8 @@ fn asm_jge_taken_equal() {
 fn asm_jge_not_taken() {
     let code = assemble(
         "MOVI R0, 3\nMOVI R1, 5\nJGE R0, R1, hit\nMOVI R2, 99\nHALT\nhit:\nMOVI R2, 1\nHALT",
-    ).unwrap();
+    )
+    .unwrap();
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 99);
@@ -638,7 +882,8 @@ fn asm_jge_not_taken() {
 fn asm_jlt_taken() {
     let code = assemble(
         "MOVI R0, 3\nMOVI R1, 5\nJLT R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
-    ).unwrap();
+    )
+    .unwrap();
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 1);
@@ -648,7 +893,8 @@ fn asm_jlt_taken() {
 fn asm_jgt_taken() {
     let code = assemble(
         "MOVI R0, 10\nMOVI R1, 5\nJGT R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
-    ).unwrap();
+    )
+    .unwrap();
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 1);
@@ -658,7 +904,8 @@ fn asm_jgt_taken() {
 fn asm_jgt_not_taken_equal() {
     let code = assemble(
         "MOVI R0, 5\nMOVI R1, 5\nJGT R0, R1, hit\nMOVI R2, 99\nHALT\nhit:\nMOVI R2, 1\nHALT",
-    ).unwrap();
+    )
+    .unwrap();
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 99);
@@ -668,7 +915,8 @@ fn asm_jgt_not_taken_equal() {
 fn asm_jle_taken_equal() {
     let code = assemble(
         "MOVI R0, 5\nMOVI R1, 5\nJLE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
-    ).unwrap();
+    )
+    .unwrap();
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 1);
@@ -678,7 +926,8 @@ fn asm_jle_taken_equal() {
 fn asm_jle_taken_less() {
     let code = assemble(
         "MOVI R0, 3\nMOVI R1, 5\nJLE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
-    ).unwrap();
+    )
+    .unwrap();
     let mut vm = FluxVM::new();
     vm.run(&code).unwrap();
     assert_eq!(vm.regs.get(2), 1);
@@ -700,12 +949,18 @@ fn asm_nop() {
 
 #[test]
 fn asm_movi() {
-    assert_eq!(assemble("MOVI R0, 42").unwrap(), vec![Op::Movi as u8, 0, 42, 0]);
+    assert_eq!(
+        assemble("MOVI R0, 42").unwrap(),
+        vec![Op::Movi as u8, 0, 42, 0]
+    );
 }
 
 #[test]
 fn asm_add() {
-    assert_eq!(assemble("IADD R2, R0, R1").unwrap(), vec![Op::Iadd as u8, 2, 0, 1]);
+    assert_eq!(
+        assemble("IADD R2, R0, R1").unwrap(),
+        vec![Op::Iadd as u8, 2, 0, 1]
+    );
 }
 
 #[test]
@@ -727,9 +982,18 @@ fn asm_cmp() {
 fn asm_multiple_instructions() {
     let code = assemble("MOVI R0, 10\nMOVI R1, 20\nIADD R2, R0, R1\nHALT").unwrap();
     let expected = vec![
-        Op::Movi as u8, 0, 10, 0,
-        Op::Movi as u8, 1, 20, 0,
-        Op::Iadd as u8, 2, 0, 1,
+        Op::Movi as u8,
+        0,
+        10,
+        0,
+        Op::Movi as u8,
+        1,
+        20,
+        0,
+        Op::Iadd as u8,
+        2,
+        0,
+        1,
         Op::Halt as u8,
     ];
     assert_eq!(code, expected);
@@ -761,10 +1025,7 @@ fn asm_undefined_label() {
 fn combined_with_density() {
     let policy = policies::combined_policy(10000, 500, 0, 0, 300, false, 0);
     let mut e = ConservationEnforcer::new(policy, 10000);
-    let result = e.enforce(
-        "Write something",
-        "blah blah blah blah blah blah blah",
-    );
+    let result = e.enforce("Write something", "blah blah blah blah blah blah blah");
     assert!(!result.allowed);
 }
 

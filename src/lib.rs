@@ -31,39 +31,39 @@ use core::fmt;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum Op {
-    Nop   = 0x00,
-    Mov   = 0x01,
-    Load  = 0x02,
+    Nop = 0x00,
+    Mov = 0x01,
+    Load = 0x02,
     Store = 0x03,
-    Jmp   = 0x04,
-    Jz    = 0x05,
-    Jnz   = 0x06,
-    Call  = 0x07,
-    Iadd  = 0x08,
-    Isub  = 0x09,
-    Imul  = 0x0A,
-    Idiv  = 0x0B,
-    Imod  = 0x0C,
-    Ineg  = 0x0D,
-    Inc   = 0x0E,
-    Dec   = 0x0F,
-    Iand  = 0x10,
-    Ior   = 0x11,
-    Ixor  = 0x12,
-    Inot  = 0x13,
-    Ishl  = 0x14,
-    Ishr  = 0x15,
-    Push  = 0x20,
-    Pop   = 0x21,
-    Dup   = 0x22,
-    Ret   = 0x28,
-    Movi  = 0x2B,
-    Cmp   = 0x2D,
-    Je    = 0x2E,
-    Jne   = 0x2F,
-    Jsge  = 0x30,
-    Jslt  = 0x31,
-    Halt  = 0x80,
+    Jmp = 0x04,
+    Jz = 0x05,
+    Jnz = 0x06,
+    Call = 0x07,
+    Iadd = 0x08,
+    Isub = 0x09,
+    Imul = 0x0A,
+    Idiv = 0x0B,
+    Imod = 0x0C,
+    Ineg = 0x0D,
+    Inc = 0x0E,
+    Dec = 0x0F,
+    Iand = 0x10,
+    Ior = 0x11,
+    Ixor = 0x12,
+    Inot = 0x13,
+    Ishl = 0x14,
+    Ishr = 0x15,
+    Push = 0x20,
+    Pop = 0x21,
+    Dup = 0x22,
+    Ret = 0x28,
+    Movi = 0x2B,
+    Cmp = 0x2D,
+    Je = 0x2E,
+    Jne = 0x2F,
+    Jsge = 0x30,
+    Jslt = 0x31,
+    Halt = 0x80,
     Yield = 0x81,
     Syscall = 0xF0,
 }
@@ -71,18 +71,40 @@ pub enum Op {
 impl Op {
     pub fn from_byte(b: u8) -> Option<Self> {
         Some(match b {
-            0x00 => Op::Nop,   0x01 => Op::Mov,   0x02 => Op::Load,
-            0x03 => Op::Store, 0x04 => Op::Jmp,   0x05 => Op::Jz,
-            0x06 => Op::Jnz,   0x07 => Op::Call,  0x08 => Op::Iadd,
-            0x09 => Op::Isub,  0x0A => Op::Imul,  0x0B => Op::Idiv,
-            0x0C => Op::Imod,  0x0D => Op::Ineg,  0x0E => Op::Inc,
-            0x0F => Op::Dec,   0x10 => Op::Iand,  0x11 => Op::Ior,
-            0x12 => Op::Ixor,  0x13 => Op::Inot,  0x14 => Op::Ishl,
-            0x15 => Op::Ishr,  0x20 => Op::Push,  0x21 => Op::Pop,
-            0x22 => Op::Dup,   0x28 => Op::Ret,   0x2B => Op::Movi,
-            0x2D => Op::Cmp,   0x2E => Op::Je,    0x2F => Op::Jne,
-            0x30 => Op::Jsge,  0x31 => Op::Jslt,
-            0x80 => Op::Halt,  0x81 => Op::Yield,
+            0x00 => Op::Nop,
+            0x01 => Op::Mov,
+            0x02 => Op::Load,
+            0x03 => Op::Store,
+            0x04 => Op::Jmp,
+            0x05 => Op::Jz,
+            0x06 => Op::Jnz,
+            0x07 => Op::Call,
+            0x08 => Op::Iadd,
+            0x09 => Op::Isub,
+            0x0A => Op::Imul,
+            0x0B => Op::Idiv,
+            0x0C => Op::Imod,
+            0x0D => Op::Ineg,
+            0x0E => Op::Inc,
+            0x0F => Op::Dec,
+            0x10 => Op::Iand,
+            0x11 => Op::Ior,
+            0x12 => Op::Ixor,
+            0x13 => Op::Inot,
+            0x14 => Op::Ishl,
+            0x15 => Op::Ishr,
+            0x20 => Op::Push,
+            0x21 => Op::Pop,
+            0x22 => Op::Dup,
+            0x28 => Op::Ret,
+            0x2B => Op::Movi,
+            0x2D => Op::Cmp,
+            0x2E => Op::Je,
+            0x2F => Op::Jne,
+            0x30 => Op::Jsge,
+            0x31 => Op::Jslt,
+            0x80 => Op::Halt,
+            0x81 => Op::Yield,
             0xF0 => Op::Syscall,
             _ => return None,
         })
@@ -94,33 +116,33 @@ impl Op {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 pub mod syscall {
-    pub const GET_INPUT_LEN: u32    = 1;
-    pub const GET_OUTPUT_LEN: u32   = 2;
-    pub const GET_INPUT_WORDS: u32  = 3;
+    pub const GET_INPUT_LEN: u32 = 1;
+    pub const GET_OUTPUT_LEN: u32 = 2;
+    pub const GET_INPUT_WORDS: u32 = 3;
     pub const GET_OUTPUT_WORDS: u32 = 4;
-    pub const GET_TOKEN_COUNT: u32  = 5;
-    pub const GET_REPETITION: u32   = 6;
-    pub const GET_CATEGORY: u32     = 7;
-    pub const SET_VIOLATION: u32    = 8;
-    pub const GET_BUDGET: u32       = 10;
+    pub const GET_TOKEN_COUNT: u32 = 5;
+    pub const GET_REPETITION: u32 = 6;
+    pub const GET_CATEGORY: u32 = 7;
+    pub const SET_VIOLATION: u32 = 8;
+    pub const GET_BUDGET: u32 = 10;
     pub const GET_UNIQUE_RATIO: u32 = 11;
-    pub const GET_ENTROPY: u32      = 12;
-    pub const GET_CALL_COUNT: u32   = 13;
-    pub const DECAY_BUDGET: u32     = 14;
+    pub const GET_ENTROPY: u32 = 12;
+    pub const GET_CALL_COUNT: u32 = 13;
+    pub const DECAY_BUDGET: u32 = 14;
 }
 
 /// Violation reason strings indexed by code.
 pub fn violation_reason(code: u32) -> &'static str {
     match code {
-        1  => "Length budget exceeded",
-        2  => "Excessive repetition detected",
-        3  => "Category confinement violation",
-        4  => "Information entropy violation",
-        5  => "Information density below threshold",
-        6  => "Scope discipline violation",
-        7  => "Budget exhausted (decay cooldown)",
+        1 => "Length budget exceeded",
+        2 => "Excessive repetition detected",
+        3 => "Category confinement violation",
+        4 => "Information entropy violation",
+        5 => "Information density below threshold",
+        6 => "Scope discipline violation",
+        7 => "Budget exhausted (decay cooldown)",
         99 => "Custom conservation law violation",
-        _  => "Unknown conservation violation",
+        _ => "Unknown conservation violation",
     }
 }
 
@@ -340,11 +362,12 @@ impl FluxVM {
 
     fn step(&mut self) -> Result<bool, VmError> {
         let opcode_byte = self.bytecode[self.pc];
-        let op = Op::from_byte(opcode_byte)
-            .ok_or(VmError::InvalidOpcode(opcode_byte))?;
+        let op = Op::from_byte(opcode_byte).ok_or(VmError::InvalidOpcode(opcode_byte))?;
 
         match op {
-            Op::Nop => { self.pc += 1; }
+            Op::Nop => {
+                self.pc += 1;
+            }
             Op::Mov => {
                 let (rd, rs) = self.decode_c();
                 let v = self.regs.get(rs as usize);
@@ -385,30 +408,43 @@ impl FluxVM {
             }
             Op::Iadd => {
                 let (rd, rs1, rs2) = self.decode_e();
-                let v = self.regs.get(rs1 as usize).wrapping_add(self.regs.get(rs2 as usize));
+                let v = self
+                    .regs
+                    .get(rs1 as usize)
+                    .wrapping_add(self.regs.get(rs2 as usize));
                 self.regs.set(rd as usize, v);
             }
             Op::Isub => {
                 let (rd, rs1, rs2) = self.decode_e();
-                let v = self.regs.get(rs1 as usize).wrapping_sub(self.regs.get(rs2 as usize));
+                let v = self
+                    .regs
+                    .get(rs1 as usize)
+                    .wrapping_sub(self.regs.get(rs2 as usize));
                 self.regs.set(rd as usize, v);
             }
             Op::Imul => {
                 let (rd, rs1, rs2) = self.decode_e();
-                let v = self.regs.get(rs1 as usize).wrapping_mul(self.regs.get(rs2 as usize));
+                let v = self
+                    .regs
+                    .get(rs1 as usize)
+                    .wrapping_mul(self.regs.get(rs2 as usize));
                 self.regs.set(rd as usize, v);
             }
             Op::Idiv => {
                 let (rd, rs1, rs2) = self.decode_e();
                 let d = self.regs.get(rs2 as usize);
-                if d == 0 { return Err(VmError::DivisionByZero); }
+                if d == 0 {
+                    return Err(VmError::DivisionByZero);
+                }
                 let v = self.regs.get(rs1 as usize) / d;
                 self.regs.set(rd as usize, v);
             }
             Op::Imod => {
                 let (rd, rs1, rs2) = self.decode_e();
                 let d = self.regs.get(rs2 as usize);
-                if d == 0 { return Err(VmError::DivisionByZero); }
+                if d == 0 {
+                    return Err(VmError::DivisionByZero);
+                }
                 let v = self.regs.get(rs1 as usize) % d;
                 self.regs.set(rd as usize, v);
             }
@@ -449,12 +485,18 @@ impl FluxVM {
             }
             Op::Ishl => {
                 let (rd, rs1, rs2) = self.decode_e();
-                let v = self.regs.get(rs1 as usize).wrapping_shl(self.regs.get(rs2 as usize));
+                let v = self
+                    .regs
+                    .get(rs1 as usize)
+                    .wrapping_shl(self.regs.get(rs2 as usize));
                 self.regs.set(rd as usize, v);
             }
             Op::Ishr => {
                 let (rd, rs1, rs2) = self.decode_e();
-                let v = self.regs.get(rs1 as usize).wrapping_shr(self.regs.get(rs2 as usize));
+                let v = self
+                    .regs
+                    .get(rs1 as usize)
+                    .wrapping_shr(self.regs.get(rs2 as usize));
                 self.regs.set(rd as usize, v);
             }
             Op::Push => {
@@ -602,9 +644,13 @@ impl FluxVM {
                         let w = words[i];
                         let mut c = 0u32;
                         for j in 0..words.len() {
-                            if words[j] == w { c += 1; }
+                            if words[j] == w {
+                                c += 1;
+                            }
                         }
-                        if c > max_count { max_count = c; }
+                        if c > max_count {
+                            max_count = c;
+                        }
                     }
                     self.regs.set(0, (max_count * 1000) / words.len() as u32);
                 }
@@ -620,7 +666,9 @@ impl FluxVM {
                     let iw_set: Vec<&str> = iw.into_iter().collect();
                     let mut overlap = 0u32;
                     for w in &ow {
-                        if iw_set.contains(w) { overlap += 1; }
+                        if iw_set.contains(w) {
+                            overlap += 1;
+                        }
                     }
                     let score = core::cmp::min(1000, (overlap * 1000) / ow.len() as u32);
                     self.regs.set(0, score);
@@ -645,7 +693,8 @@ impl FluxVM {
                             unique.push(*w);
                         }
                     }
-                    self.regs.set(0, ((unique.len() as u32) * 1000) / words.len() as u32);
+                    self.regs
+                        .set(0, ((unique.len() as u32) * 1000) / words.len() as u32);
                 }
             }
             syscall::GET_ENTROPY => {
@@ -659,7 +708,9 @@ impl FluxVM {
                     let mut counted = Vec::new();
                     let mut ent = 0.0f32;
                     for w in &words {
-                        if counted.contains(w) { continue; }
+                        if counted.contains(w) {
+                            continue;
+                        }
                         counted.push(*w);
                         let c = words.iter().filter(|&&x| x == *w).count() as f32;
                         let p = c / total;
@@ -689,11 +740,15 @@ impl Default for FluxVM {
 
 /// Simple log2 for f32 without external dependencies.
 fn log2_f32(x: f32) -> f32 {
-    if x <= 0.0 { return 0.0; }
+    if x <= 0.0 {
+        return 0.0;
+    }
     // Use bit manipulation: log2(x) = log(x) / log(2)
     // But we can't use std math in no_std... use a manual approximation.
     #[cfg(feature = "std")]
-    { x.ln() / core::f32::consts::LN_2 }
+    {
+        x.ln() / core::f32::consts::LN_2
+    }
     #[cfg(not(feature = "std"))]
     {
         // Fast log2 approximation via bit manipulation
@@ -701,7 +756,7 @@ fn log2_f32(x: f32) -> f32 {
         let exp = ((bits >> 23) & 0xFF) as i32 - 127;
         let mantissa_bits = (bits & 0x7FFFFF) | 0x800000;
         let m = mantissa_bits as f32 / 0x800000u32 as f32; // 1.0 to ~2.0
-        // Linear interpolation: log2(1+f) ≈ f for the mantissa part
+                                                           // Linear interpolation: log2(1+f) ≈ f for the mantissa part
         let frac = m - 1.0;
         (exp as f32) + frac - 0.5 * frac * frac // slightly better than linear
     }
@@ -764,10 +819,12 @@ impl ConservationEnforcer {
             policy: policy_bytecode,
             budget,
             initial_budget: budget,
-            correction_template: correction_template.unwrap_or(
-                "⚠️ This response was blocked by a conservation law: {reason}. \
-                 Please try again with a more conserved response."
-            ).to_string(),
+            correction_template: correction_template
+                .unwrap_or(
+                    "⚠️ This response was blocked by a conservation law: {reason}. \
+                 Please try again with a more conserved response.",
+                )
+                .to_string(),
             call_count: 0,
             #[cfg(feature = "audit")]
             enable_audit: false,
@@ -872,14 +929,24 @@ impl ConservationEnforcer {
             let input_hash = simple_hash(input_text);
             let output_hash = simple_hash(output_text);
             let timestamp = current_iso_timestamp();
-            let violation_reason = result.violation.as_ref().map(|v| v.reason.as_str()).unwrap_or("null");
+            let violation_reason = result
+                .violation
+                .as_ref()
+                .map(|v| v.reason.as_str())
+                .unwrap_or("null");
             let violation_code = result.violation.as_ref().map(|v| v.code).unwrap_or(0);
             let _ = writeln!(
                 f,
                 r#"{{"timestamp":"{}","input_hash":"{:016x}","output_hash":"{:016x}","allowed":{},"violation":{},"violation_code":{},"cycles":{},"remaining_budget":{},"call_count":{}}}"#,
-                timestamp, input_hash, output_hash, result.allowed,
-                format_json_string(violation_reason), violation_code,
-                result.cycles, self.budget, self.call_count
+                timestamp,
+                input_hash,
+                output_hash,
+                result.allowed,
+                format_json_string(violation_reason),
+                violation_code,
+                result.cycles,
+                self.budget,
+                self.call_count
             );
         }
     }
@@ -902,7 +969,9 @@ fn simple_hash(s: &str) -> u64 {
 #[cfg(feature = "audit")]
 fn current_iso_timestamp() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default();
     let secs = now.as_secs();
     // Simple ISO timestamp approximation (UTC)
     let days = secs / 86400;
@@ -921,7 +990,9 @@ fn days_to_date(days: u64) -> (u64, u64, u64) {
     let mut remaining = days;
     loop {
         let days_in_year = if is_leap(year) { 366 } else { 365 };
-        if remaining < days_in_year { break; }
+        if remaining < days_in_year {
+            break;
+        }
         remaining -= days_in_year;
         year += 1;
     }
@@ -932,7 +1003,9 @@ fn days_to_date(days: u64) -> (u64, u64, u64) {
     };
     let mut month = 1u64;
     for &dim in &month_lengths {
-        if remaining < dim { break; }
+        if remaining < dim {
+            break;
+        }
         remaining -= dim;
         month += 1;
     }
@@ -946,7 +1019,9 @@ fn is_leap(year: u64) -> bool {
 
 #[cfg(feature = "audit")]
 fn format_json_string(s: &str) -> String {
-    if s == "null" { return s.to_string(); }
+    if s == "null" {
+        return s.to_string();
+    }
     format!("\"{}\"", s.replace('"', "\\\""))
 }
 
@@ -977,10 +1052,22 @@ pub mod assembler {
     impl Instr {
         fn new(op: u8, fmt: char) -> Self {
             Self {
-                op, fmt,
-                rd: 0, rs: 0, rs2: 0, imm: 0,
-                label: None, offset: 0,
-                size: match fmt { 'A' => 1, 'B' => 2, 'C' => 3, 'D' => 4, 'E' => 4, _ => 1 },
+                op,
+                fmt,
+                rd: 0,
+                rs: 0,
+                rs2: 0,
+                imm: 0,
+                label: None,
+                offset: 0,
+                size: match fmt {
+                    'A' => 1,
+                    'B' => 2,
+                    'C' => 3,
+                    'D' => 4,
+                    'E' => 4,
+                    _ => 1,
+                },
             }
         }
     }
@@ -991,14 +1078,18 @@ pub mod assembler {
 
         for (line_num, line) in source.lines().enumerate() {
             let text = strip_comments(line).trim().to_string();
-            if text.is_empty() { continue; }
+            if text.is_empty() {
+                continue;
+            }
 
             // Label?
             let text = match parse_label(&text, &mut labels, &raw, line_num) {
                 Ok(remaining) => remaining,
                 Err(e) => return Err(e),
             };
-            if text.is_empty() { continue; }
+            if text.is_empty() {
+                continue;
+            }
 
             let parts: Vec<&str> = text.splitn(2, char::is_whitespace).collect();
             let mnem = parts[0].to_uppercase();
@@ -1016,7 +1107,8 @@ pub mod assembler {
 
                 // CMP rd, rs
                 let mut cmp_instr = Instr::new(Op::Cmp as u8, 'C');
-                cmp_instr.rd = rd; cmp_instr.rs = rs;
+                cmp_instr.rd = rd;
+                cmp_instr.rs = rs;
                 raw.push(cmp_instr);
 
                 match mnem.as_str() {
@@ -1087,7 +1179,12 @@ pub mod assembler {
                 "XOR" | "IXOR" => (Op::Ixor as u8, 'E'),
                 "SHL" | "ISHL" => (Op::Ishl as u8, 'E'),
                 "SHR" | "ISHR" => (Op::Ishr as u8, 'E'),
-                _ => return Err(format!("Line {}: unknown instruction '{mnem}'", line_num + 1)),
+                _ => {
+                    return Err(format!(
+                        "Line {}: unknown instruction '{mnem}'",
+                        line_num + 1
+                    ))
+                }
             };
 
             let mut instr = Instr::new(op_byte, fmt);
@@ -1110,8 +1207,13 @@ pub mod assembler {
                     } else if ps.len() == 2 {
                         instr.rd = parse_reg(ps[0], line_num)?;
                         let v = ps[1];
-                        if !v.is_empty() && (v.as_bytes()[0].is_ascii_digit() || (v.starts_with('-') && v.len() > 1)) {
-                            instr.imm = v.parse::<i32>().map_err(|_| format!("Line {}: bad immediate '{v}'", line_num + 1))?;
+                        if !v.is_empty()
+                            && (v.as_bytes()[0].is_ascii_digit()
+                                || (v.starts_with('-') && v.len() > 1))
+                        {
+                            instr.imm = v.parse::<i32>().map_err(|_| {
+                                format!("Line {}: bad immediate '{v}'", line_num + 1)
+                            })?;
                         } else {
                             instr.label = Some(v.to_string());
                         }
@@ -1137,9 +1239,17 @@ pub mod assembler {
         }
 
         // Build label → byte-offset map
-        let mut label_bytes: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+        let mut label_bytes: std::collections::HashMap<String, usize> =
+            std::collections::HashMap::new();
         for (lbl, idx) in &labels {
-            label_bytes.insert(lbl.clone(), if *idx < raw.len() { raw[*idx].offset } else { offset });
+            label_bytes.insert(
+                lbl.clone(),
+                if *idx < raw.len() {
+                    raw[*idx].offset
+                } else {
+                    offset
+                },
+            );
         }
 
         // Emit bytecode
@@ -1149,11 +1259,16 @@ pub mod assembler {
             match instr.fmt {
                 'A' => {}
                 'B' => out.push(instr.rd),
-                'C' => { out.push(instr.rd); out.push(instr.rs); }
+                'C' => {
+                    out.push(instr.rd);
+                    out.push(instr.rs);
+                }
                 'D' => {
                     out.push(instr.rd);
                     if let Some(ref lbl) = instr.label {
-                        let target = *label_bytes.get(lbl).ok_or_else(|| format!("Undefined label: '{lbl}'"))?;
+                        let target = *label_bytes
+                            .get(lbl)
+                            .ok_or_else(|| format!("Undefined label: '{lbl}'"))?;
                         let rel = target as i32 - (instr.offset + 4) as i32;
                         out.push((rel & 0xFF) as u8);
                         out.push(((rel >> 8) & 0xFF) as u8);
@@ -1163,7 +1278,11 @@ pub mod assembler {
                         out.push(((imm >> 8) & 0xFF) as u8);
                     }
                 }
-                'E' => { out.push(instr.rd); out.push(instr.rs); out.push(instr.rs2); }
+                'E' => {
+                    out.push(instr.rd);
+                    out.push(instr.rs);
+                    out.push(instr.rs2);
+                }
                 _ => {}
             }
         }
@@ -1176,7 +1295,9 @@ pub mod assembler {
         let mut idx = line.len();
         for marker in [';', '#'] {
             if let Some(pos) = line.find(marker) {
-                if pos < idx { idx = pos; }
+                if pos < idx {
+                    idx = pos;
+                }
             }
         }
         &line[..idx]
@@ -1189,11 +1310,15 @@ pub mod assembler {
         line_num: usize,
     ) -> Result<&'a str, String> {
         let text = text.trim();
-        if text.is_empty() { return Ok(text); }
+        if text.is_empty() {
+            return Ok(text);
+        }
 
         // Check if text starts with identifier:
         let bytes = text.as_bytes();
-        if bytes.is_empty() { return Ok(text); }
+        if bytes.is_empty() {
+            return Ok(text);
+        }
         let first = bytes[0];
         if !(first.is_ascii_alphabetic() || first == b'_') {
             return Ok(text);
@@ -1203,7 +1328,9 @@ pub mod assembler {
         if let Some(colon_pos) = text.find(':') {
             let label_part = &text[..colon_pos];
             // Verify label is a valid identifier
-            let valid = label_part.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_');
+            let valid = label_part
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'_');
             if !valid {
                 return Ok(text);
             }
@@ -1224,9 +1351,14 @@ pub mod assembler {
         let tok = tok.trim().to_uppercase();
         let tb = tok.as_bytes();
         if tb.len() < 2 || tb[0] != b'R' || !tb[1..].iter().all(|b| b.is_ascii_digit()) {
-            return Err(format!("Line {}: expected register, got '{tok}'", line_num + 1));
+            return Err(format!(
+                "Line {}: expected register, got '{tok}'",
+                line_num + 1
+            ));
         }
-        let n: u8 = tok[1..].parse().map_err(|_| format!("Line {}: register out of range", line_num + 1))?;
+        let n: u8 = tok[1..]
+            .parse()
+            .map_err(|_| format!("Line {}: register out of range", line_num + 1))?;
         if n as usize >= super::NUM_REGISTERS {
             return Err(format!("Line {}: R{n} out of range", line_num + 1));
         }
@@ -1261,7 +1393,8 @@ block:
             MOVI R0, 1
             HALT
             "#
-        )).expect("length_budget_policy assembly")
+        ))
+        .expect("length_budget_policy assembly")
     }
 
     /// Block outputs with excessive repetition. `max_ratio` is per-mille (300 = 30%).
@@ -1282,7 +1415,8 @@ block:
             MOVI R0, 1
             HALT
             "#
-        )).expect("repetition_policy assembly")
+        ))
+        .expect("repetition_policy assembly")
     }
 
     /// Block outputs that drift too far from input topic. `min_overlap` is per-mille.
@@ -1303,7 +1437,8 @@ block:
             MOVI R0, 1
             HALT
             "#
-        )).expect("category_policy assembly")
+        ))
+        .expect("category_policy assembly")
     }
 
     /// Block outputs with too-low Shannon entropy. `min_entropy` is entropy × 1000.
@@ -1324,7 +1459,8 @@ block:
             MOVI R0, 1
             HALT
             "#
-        )).expect("entropy_policy assembly")
+        ))
+        .expect("entropy_policy assembly")
     }
 
     /// Block outputs with low information density.
@@ -1346,7 +1482,8 @@ block:
             MOVI R0, 1
             HALT
             "#
-        )).expect("information_density_policy assembly")
+        ))
+        .expect("information_density_policy assembly")
     }
 
     /// Block outputs that drift outside the input's topic scope.
@@ -1397,7 +1534,8 @@ block:
             MOVI R0, 1
             HALT
             "#
-        )).expect("scope_discipline_policy assembly")
+        ))
+        .expect("scope_discipline_policy assembly")
     }
 
     /// Enforce budget decay over time — each call consumes budget.
@@ -1428,7 +1566,8 @@ exhausted:
             MOVI R0, 1
             HALT
             "#
-        )).expect("budget_decay_policy assembly")
+        ))
+        .expect("budget_decay_policy assembly")
     }
 
     /// Combined conservation policy: length + repetition + category + entropy + optional density + decay.
@@ -1546,7 +1685,8 @@ block_decay:
             MOVI R0, 1
             HALT
             "#
-        )).expect("combined_policy assembly")
+        ))
+        .expect("combined_policy assembly")
     }
 }
 
@@ -1570,7 +1710,9 @@ pub mod audit {
             if let Some(parent) = p.parent() {
                 let _ = fs::create_dir_all(parent);
             }
-            Self { path: path.to_string() }
+            Self {
+                path: path.to_string(),
+            }
         }
 
         pub fn log(
@@ -1595,7 +1737,11 @@ pub mod audit {
                 r#"{{"timestamp":"{timestamp}","input_hash":"{input_hash:016x}","output_hash":"{output_hash:016x}","allowed":{allowed},"violation":{violation},"violation_code":{violation_code},"cycles":{cycles},"remaining_budget":{remaining_budget},"call_count":{call_count}}}"#,
             );
 
-            if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(&self.path) {
+            if let Ok(mut f) = fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&self.path)
+            {
                 let _ = writeln!(f, "{line}");
             }
         }
@@ -1613,7 +1759,9 @@ pub mod audit {
 
             if let Ok(content) = fs::read_to_string(&self.path) {
                 for line in content.lines() {
-                    if line.trim().is_empty() { continue; }
+                    if line.trim().is_empty() {
+                        continue;
+                    }
                     total += 1;
                     if line.contains(r#""allowed":false"#) {
                         blocked += 1;
@@ -1625,9 +1773,17 @@ pub mod audit {
             AuditSummary {
                 total_calls: total,
                 total_blocked: blocked,
-                block_rate: if total > 0 { blocked as f64 / total as f64 } else { 0.0 },
+                block_rate: if total > 0 {
+                    blocked as f64 / total as f64
+                } else {
+                    0.0
+                },
                 total_cycles,
-                avg_cycles: if total > 0 { total_cycles as f64 / total as f64 } else { 0.0 },
+                avg_cycles: if total > 0 {
+                    total_cycles as f64 / total as f64
+                } else {
+                    0.0
+                },
             }
         }
 
@@ -1649,7 +1805,9 @@ pub mod audit {
         let pattern = format!(r#""{key}":"#);
         if let Some(pos) = line.find(&pattern) {
             let rest = &line[pos + pattern.len()..];
-            let end = rest.find(|c: char| !c.is_ascii_digit()).unwrap_or(rest.len());
+            let end = rest
+                .find(|c: char| !c.is_ascii_digit())
+                .unwrap_or(rest.len());
             rest[..end].parse().unwrap_or(0)
         } else {
             0
@@ -1781,7 +1939,21 @@ mod tests {
 
     #[test]
     fn test_vm_add() {
-        let code = vec![Op::Movi as u8, 0, 10, 0, Op::Movi as u8, 1, 20, 0, Op::Iadd as u8, 2, 0, 1, Op::Halt as u8];
+        let code = vec![
+            Op::Movi as u8,
+            0,
+            10,
+            0,
+            Op::Movi as u8,
+            1,
+            20,
+            0,
+            Op::Iadd as u8,
+            2,
+            0,
+            1,
+            Op::Halt as u8,
+        ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 30);
@@ -1789,7 +1961,21 @@ mod tests {
 
     #[test]
     fn test_vm_sub() {
-        let code = vec![Op::Movi as u8, 0, 50, 0, Op::Movi as u8, 1, 20, 0, Op::Isub as u8, 2, 0, 1, Op::Halt as u8];
+        let code = vec![
+            Op::Movi as u8,
+            0,
+            50,
+            0,
+            Op::Movi as u8,
+            1,
+            20,
+            0,
+            Op::Isub as u8,
+            2,
+            0,
+            1,
+            Op::Halt as u8,
+        ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 30);
@@ -1797,7 +1983,21 @@ mod tests {
 
     #[test]
     fn test_vm_mul() {
-        let code = vec![Op::Movi as u8, 0, 7, 0, Op::Movi as u8, 1, 6, 0, Op::Imul as u8, 2, 0, 1, Op::Halt as u8];
+        let code = vec![
+            Op::Movi as u8,
+            0,
+            7,
+            0,
+            Op::Movi as u8,
+            1,
+            6,
+            0,
+            Op::Imul as u8,
+            2,
+            0,
+            1,
+            Op::Halt as u8,
+        ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 42);
@@ -1805,7 +2005,21 @@ mod tests {
 
     #[test]
     fn test_vm_div() {
-        let code = vec![Op::Movi as u8, 0, 100, 0, Op::Movi as u8, 1, 5, 0, Op::Idiv as u8, 2, 0, 1, Op::Halt as u8];
+        let code = vec![
+            Op::Movi as u8,
+            0,
+            100,
+            0,
+            Op::Movi as u8,
+            1,
+            5,
+            0,
+            Op::Idiv as u8,
+            2,
+            0,
+            1,
+            Op::Halt as u8,
+        ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 20);
@@ -1813,7 +2027,21 @@ mod tests {
 
     #[test]
     fn test_vm_div_by_zero() {
-        let code = vec![Op::Movi as u8, 0, 10, 0, Op::Movi as u8, 1, 0, 0, Op::Idiv as u8, 2, 0, 1, Op::Halt as u8];
+        let code = vec![
+            Op::Movi as u8,
+            0,
+            10,
+            0,
+            Op::Movi as u8,
+            1,
+            0,
+            0,
+            Op::Idiv as u8,
+            2,
+            0,
+            1,
+            Op::Halt as u8,
+        ];
         let mut vm = FluxVM::new();
         let result = vm.run(&code);
         assert_eq!(result, Err(VmError::DivisionByZero));
@@ -1821,7 +2049,21 @@ mod tests {
 
     #[test]
     fn test_vm_mod() {
-        let code = vec![Op::Movi as u8, 0, 17, 0, Op::Movi as u8, 1, 5, 0, Op::Imod as u8, 2, 0, 1, Op::Halt as u8];
+        let code = vec![
+            Op::Movi as u8,
+            0,
+            17,
+            0,
+            Op::Movi as u8,
+            1,
+            5,
+            0,
+            Op::Imod as u8,
+            2,
+            0,
+            1,
+            Op::Halt as u8,
+        ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 2);
@@ -1832,9 +2074,26 @@ mod tests {
     #[test]
     fn test_vm_je_taken() {
         let code = vec![
-            Op::Movi as u8, 0, 5, 0, Op::Movi as u8, 1, 5, 0,
-            Op::Cmp as u8, 0, 1, Op::Je as u8, 0, 4, 0,
-            Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+            Op::Movi as u8,
+            0,
+            5,
+            0,
+            Op::Movi as u8,
+            1,
+            5,
+            0,
+            Op::Cmp as u8,
+            0,
+            1,
+            Op::Je as u8,
+            0,
+            4,
+            0,
+            Op::Movi as u8,
+            0,
+            99,
+            0,
+            Op::Halt as u8,
         ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
@@ -1844,9 +2103,26 @@ mod tests {
     #[test]
     fn test_vm_jne_taken() {
         let code = vec![
-            Op::Movi as u8, 0, 5, 0, Op::Movi as u8, 1, 3, 0,
-            Op::Cmp as u8, 0, 1, Op::Jne as u8, 0, 4, 0,
-            Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+            Op::Movi as u8,
+            0,
+            5,
+            0,
+            Op::Movi as u8,
+            1,
+            3,
+            0,
+            Op::Cmp as u8,
+            0,
+            1,
+            Op::Jne as u8,
+            0,
+            4,
+            0,
+            Op::Movi as u8,
+            0,
+            99,
+            0,
+            Op::Halt as u8,
         ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
@@ -1856,9 +2132,26 @@ mod tests {
     #[test]
     fn test_vm_jsge_greater() {
         let code = vec![
-            Op::Movi as u8, 0, 10, 0, Op::Movi as u8, 1, 5, 0,
-            Op::Cmp as u8, 0, 1, Op::Jsge as u8, 0, 4, 0,
-            Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+            Op::Movi as u8,
+            0,
+            10,
+            0,
+            Op::Movi as u8,
+            1,
+            5,
+            0,
+            Op::Cmp as u8,
+            0,
+            1,
+            Op::Jsge as u8,
+            0,
+            4,
+            0,
+            Op::Movi as u8,
+            0,
+            99,
+            0,
+            Op::Halt as u8,
         ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
@@ -1868,9 +2161,26 @@ mod tests {
     #[test]
     fn test_vm_jsge_less_should_not_jump() {
         let code = vec![
-            Op::Movi as u8, 0, 3, 0, Op::Movi as u8, 1, 5, 0,
-            Op::Cmp as u8, 0, 1, Op::Jsge as u8, 0, 4, 0,
-            Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+            Op::Movi as u8,
+            0,
+            3,
+            0,
+            Op::Movi as u8,
+            1,
+            5,
+            0,
+            Op::Cmp as u8,
+            0,
+            1,
+            Op::Jsge as u8,
+            0,
+            4,
+            0,
+            Op::Movi as u8,
+            0,
+            99,
+            0,
+            Op::Halt as u8,
         ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
@@ -1880,9 +2190,26 @@ mod tests {
     #[test]
     fn test_vm_jslt_less() {
         let code = vec![
-            Op::Movi as u8, 0, 3, 0, Op::Movi as u8, 1, 8, 0,
-            Op::Cmp as u8, 0, 1, Op::Jslt as u8, 0, 4, 0,
-            Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+            Op::Movi as u8,
+            0,
+            3,
+            0,
+            Op::Movi as u8,
+            1,
+            8,
+            0,
+            Op::Cmp as u8,
+            0,
+            1,
+            Op::Jslt as u8,
+            0,
+            4,
+            0,
+            Op::Movi as u8,
+            0,
+            99,
+            0,
+            Op::Halt as u8,
         ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
@@ -1892,9 +2219,26 @@ mod tests {
     #[test]
     fn test_vm_jslt_greater_should_not_jump() {
         let code = vec![
-            Op::Movi as u8, 0, 10, 0, Op::Movi as u8, 1, 3, 0,
-            Op::Cmp as u8, 0, 1, Op::Jslt as u8, 0, 4, 0,
-            Op::Movi as u8, 0, 99, 0, Op::Halt as u8,
+            Op::Movi as u8,
+            0,
+            10,
+            0,
+            Op::Movi as u8,
+            1,
+            3,
+            0,
+            Op::Cmp as u8,
+            0,
+            1,
+            Op::Jslt as u8,
+            0,
+            4,
+            0,
+            Op::Movi as u8,
+            0,
+            99,
+            0,
+            Op::Halt as u8,
         ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
@@ -1960,14 +2304,24 @@ mod tests {
     #[test]
     fn test_syscall_violation_flag() {
         let code = vec![
-            Op::Movi as u8, 1, 2, 0,
-            Op::Movi as u8, 0, 8, 0, Op::Syscall as u8,
+            Op::Movi as u8,
+            1,
+            2,
+            0,
+            Op::Movi as u8,
+            0,
+            8,
+            0,
+            Op::Syscall as u8,
             Op::Halt as u8,
         ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert!(vm.violated());
-        assert!(vm.violation_reason_str().to_lowercase().contains("repetition"));
+        assert!(vm
+            .violation_reason_str()
+            .to_lowercase()
+            .contains("repetition"));
     }
 
     // ── Stack tests ──
@@ -1975,8 +2329,19 @@ mod tests {
     #[test]
     fn test_push_pop() {
         let code = vec![
-            Op::Movi as u8, 0, 42, 0, Op::Push as u8, 0,
-            Op::Movi as u8, 0, 0, 0, Op::Pop as u8, 1, Op::Halt as u8,
+            Op::Movi as u8,
+            0,
+            42,
+            0,
+            Op::Push as u8,
+            0,
+            Op::Movi as u8,
+            0,
+            0,
+            0,
+            Op::Pop as u8,
+            1,
+            Op::Halt as u8,
         ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
@@ -1986,7 +2351,17 @@ mod tests {
     #[test]
     fn test_inc_dec() {
         let code = vec![
-            Op::Movi as u8, 0, 5, 0, Op::Inc as u8, 0, Op::Inc as u8, 0, Op::Dec as u8, 0, Op::Halt as u8,
+            Op::Movi as u8,
+            0,
+            5,
+            0,
+            Op::Inc as u8,
+            0,
+            Op::Inc as u8,
+            0,
+            Op::Dec as u8,
+            0,
+            Op::Halt as u8,
         ];
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
@@ -2007,12 +2382,18 @@ mod tests {
 
     #[test]
     fn test_assemble_movi() {
-        assert_eq!(assemble("MOVI R0, 42").unwrap(), vec![Op::Movi as u8, 0, 42, 0]);
+        assert_eq!(
+            assemble("MOVI R0, 42").unwrap(),
+            vec![Op::Movi as u8, 0, 42, 0]
+        );
     }
 
     #[test]
     fn test_assemble_add() {
-        assert_eq!(assemble("IADD R2, R0, R1").unwrap(), vec![Op::Iadd as u8, 2, 0, 1]);
+        assert_eq!(
+            assemble("IADD R2, R0, R1").unwrap(),
+            vec![Op::Iadd as u8, 2, 0, 1]
+        );
     }
 
     #[test]
@@ -2033,7 +2414,21 @@ mod tests {
     #[test]
     fn test_assemble_multiple() {
         let code = assemble("MOVI R0, 10\nMOVI R1, 20\nIADD R2, R0, R1\nHALT").unwrap();
-        let expected = vec![Op::Movi as u8, 0, 10, 0, Op::Movi as u8, 1, 20, 0, Op::Iadd as u8, 2, 0, 1, Op::Halt as u8];
+        let expected = vec![
+            Op::Movi as u8,
+            0,
+            10,
+            0,
+            Op::Movi as u8,
+            1,
+            20,
+            0,
+            Op::Iadd as u8,
+            2,
+            0,
+            1,
+            Op::Halt as u8,
+        ];
         assert_eq!(code, expected);
     }
 
@@ -2059,9 +2454,7 @@ mod tests {
 
     #[test]
     fn test_assemble_je_label() {
-        let code = assemble(
-            "MOVI R0, 0\nCMP R0, R0\nJE done\nMOVI R0, 99\ndone:\nHALT"
-        ).unwrap();
+        let code = assemble("MOVI R0, 0\nCMP R0, R0\nJE done\nMOVI R0, 99\ndone:\nHALT").unwrap();
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(0), 0);
@@ -2069,9 +2462,7 @@ mod tests {
 
     #[test]
     fn test_assemble_jmp_label() {
-        let code = assemble(
-            "MOVI R0, 1\nJMP skip\nMOVI R0, 99\nskip:\nMOVI R0, 42\nHALT"
-        ).unwrap();
+        let code = assemble("MOVI R0, 1\nJMP skip\nMOVI R0, 99\nskip:\nMOVI R0, 42\nHALT").unwrap();
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(0), 42);
@@ -2082,8 +2473,9 @@ mod tests {
     #[test]
     fn test_jge_taken_greater() {
         let code = assemble(
-            "MOVI R0, 10\nMOVI R1, 5\nJGE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT"
-        ).unwrap();
+            "MOVI R0, 10\nMOVI R1, 5\nJGE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
+        )
+        .unwrap();
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 1);
@@ -2092,8 +2484,9 @@ mod tests {
     #[test]
     fn test_jge_taken_equal() {
         let code = assemble(
-            "MOVI R0, 5\nMOVI R1, 5\nJGE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT"
-        ).unwrap();
+            "MOVI R0, 5\nMOVI R1, 5\nJGE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
+        )
+        .unwrap();
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 1);
@@ -2102,8 +2495,9 @@ mod tests {
     #[test]
     fn test_jge_not_taken() {
         let code = assemble(
-            "MOVI R0, 3\nMOVI R1, 5\nJGE R0, R1, hit\nMOVI R2, 99\nHALT\nhit:\nMOVI R2, 1\nHALT"
-        ).unwrap();
+            "MOVI R0, 3\nMOVI R1, 5\nJGE R0, R1, hit\nMOVI R2, 99\nHALT\nhit:\nMOVI R2, 1\nHALT",
+        )
+        .unwrap();
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 99);
@@ -2112,8 +2506,9 @@ mod tests {
     #[test]
     fn test_jlt_taken() {
         let code = assemble(
-            "MOVI R0, 3\nMOVI R1, 5\nJLT R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT"
-        ).unwrap();
+            "MOVI R0, 3\nMOVI R1, 5\nJLT R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
+        )
+        .unwrap();
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 1);
@@ -2122,8 +2517,9 @@ mod tests {
     #[test]
     fn test_jgt_taken() {
         let code = assemble(
-            "MOVI R0, 10\nMOVI R1, 5\nJGT R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT"
-        ).unwrap();
+            "MOVI R0, 10\nMOVI R1, 5\nJGT R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
+        )
+        .unwrap();
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 1);
@@ -2132,8 +2528,9 @@ mod tests {
     #[test]
     fn test_jgt_not_taken_equal() {
         let code = assemble(
-            "MOVI R0, 5\nMOVI R1, 5\nJGT R0, R1, hit\nMOVI R2, 99\nHALT\nhit:\nMOVI R2, 1\nHALT"
-        ).unwrap();
+            "MOVI R0, 5\nMOVI R1, 5\nJGT R0, R1, hit\nMOVI R2, 99\nHALT\nhit:\nMOVI R2, 1\nHALT",
+        )
+        .unwrap();
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 99);
@@ -2142,8 +2539,9 @@ mod tests {
     #[test]
     fn test_jle_taken_equal() {
         let code = assemble(
-            "MOVI R0, 5\nMOVI R1, 5\nJLE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT"
-        ).unwrap();
+            "MOVI R0, 5\nMOVI R1, 5\nJLE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
+        )
+        .unwrap();
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 1);
@@ -2152,8 +2550,9 @@ mod tests {
     #[test]
     fn test_jle_taken_less() {
         let code = assemble(
-            "MOVI R0, 3\nMOVI R1, 5\nJLE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT"
-        ).unwrap();
+            "MOVI R0, 3\nMOVI R1, 5\nJLE R0, R1, hit\nMOVI R2, 0\nHALT\nhit:\nMOVI R2, 1\nHALT",
+        )
+        .unwrap();
         let mut vm = FluxVM::new();
         vm.run(&code).unwrap();
         assert_eq!(vm.regs.get(2), 1);
@@ -2179,7 +2578,8 @@ mod tests {
     #[test]
     fn test_correction_template() {
         let mut e = ConservationEnforcer::with_options(
-            policies::length_budget_policy(3), 3,
+            policies::length_budget_policy(3),
+            3,
             Some("🚫 Blocked: {reason}"),
         );
         let r = e.enforce("Q", "This is a very long response that exceeds budget");
@@ -2202,7 +2602,12 @@ mod tests {
         let mut e = ConservationEnforcer::new(policies::repetition_policy(300), 1000);
         let r = e.enforce("Summarize", "the the the the the the the the the the");
         assert!(!r.allowed);
-        assert!(r.violation.unwrap().reason.to_lowercase().contains("repetition"));
+        assert!(r
+            .violation
+            .unwrap()
+            .reason
+            .to_lowercase()
+            .contains("repetition"));
     }
 
     // ── Category policy tests ──
@@ -2210,18 +2615,27 @@ mod tests {
     #[test]
     fn test_category_allows_on_topic() {
         let mut e = ConservationEnforcer::new(policies::category_policy(50), 1000);
-        let r = e.enforce("Python programming language",
-            "Python is a great programming language for beginners and experts alike");
+        let r = e.enforce(
+            "Python programming language",
+            "Python is a great programming language for beginners and experts alike",
+        );
         assert!(r.allowed);
     }
 
     #[test]
     fn test_category_blocks_off_topic() {
         let mut e = ConservationEnforcer::new(policies::category_policy(900), 1000);
-        let r = e.enforce("quantum physics particles",
-            "banana apple orange grape melon");
+        let r = e.enforce(
+            "quantum physics particles",
+            "banana apple orange grape melon",
+        );
         assert!(!r.allowed);
-        assert!(r.violation.unwrap().reason.to_lowercase().contains("category"));
+        assert!(r
+            .violation
+            .unwrap()
+            .reason
+            .to_lowercase()
+            .contains("category"));
     }
 
     // ── Entropy policy tests ──
@@ -2229,18 +2643,24 @@ mod tests {
     #[test]
     fn test_entropy_allows_high() {
         let mut e = ConservationEnforcer::new(policies::entropy_policy(1000), 1000);
-        let r = e.enforce("List colors",
-            "red blue green yellow orange purple cyan magenta");
+        let r = e.enforce(
+            "List colors",
+            "red blue green yellow orange purple cyan magenta",
+        );
         assert!(r.allowed);
     }
 
     #[test]
     fn test_entropy_blocks_low() {
         let mut e = ConservationEnforcer::new(policies::entropy_policy(2500), 1000);
-        let r = e.enforce("Write a poem",
-            "go go go go go go go go go go");
+        let r = e.enforce("Write a poem", "go go go go go go go go go go");
         assert!(!r.allowed);
-        assert!(r.violation.unwrap().reason.to_lowercase().contains("entropy"));
+        assert!(r
+            .violation
+            .unwrap()
+            .reason
+            .to_lowercase()
+            .contains("entropy"));
     }
 
     // ── Combined policy tests ──
@@ -2258,7 +2678,10 @@ mod tests {
     fn test_combined_blocks_on_length() {
         let policy = policies::combined_policy(3, 500, 0, 0, 0, false, 0);
         let mut e = ConservationEnforcer::new(policy, 3);
-        let r = e.enforce("Write a long essay about AI", &"Artificial intelligence is ".repeat(50));
+        let r = e.enforce(
+            "Write a long essay about AI",
+            &"Artificial intelligence is ".repeat(50),
+        );
         assert!(!r.allowed);
         assert!(r.violation.unwrap().reason.contains("Length"));
     }
@@ -2267,10 +2690,17 @@ mod tests {
     fn test_combined_blocks_on_repetition() {
         let policy = policies::combined_policy(10000, 200, 0, 0, 0, false, 0);
         let mut e = ConservationEnforcer::new(policy, 10000);
-        let r = e.enforce("Describe a sunset",
-            "beautiful beautiful beautiful beautiful beautiful beautiful beautiful");
+        let r = e.enforce(
+            "Describe a sunset",
+            "beautiful beautiful beautiful beautiful beautiful beautiful beautiful",
+        );
         assert!(!r.allowed);
-        assert!(r.violation.unwrap().reason.to_lowercase().contains("repetition"));
+        assert!(r
+            .violation
+            .unwrap()
+            .reason
+            .to_lowercase()
+            .contains("repetition"));
     }
 
     // ── Enforcement result tests ──
@@ -2342,18 +2772,24 @@ mod tests {
     #[test]
     fn test_density_allows_high() {
         let mut e = ConservationEnforcer::new(policies::information_density_policy(300), 1000);
-        let r = e.enforce("List colors",
-            "red blue green yellow orange purple cyan magenta violet turquoise");
+        let r = e.enforce(
+            "List colors",
+            "red blue green yellow orange purple cyan magenta violet turquoise",
+        );
         assert!(r.allowed);
     }
 
     #[test]
     fn test_density_blocks_low() {
         let mut e = ConservationEnforcer::new(policies::information_density_policy(500), 1000);
-        let r = e.enforce("Write a poem",
-            "go go go go go go go go go go");
+        let r = e.enforce("Write a poem", "go go go go go go go go go go");
         assert!(!r.allowed);
-        assert!(r.violation.unwrap().reason.to_lowercase().contains("density"));
+        assert!(r
+            .violation
+            .unwrap()
+            .reason
+            .to_lowercase()
+            .contains("density"));
     }
 
     #[test]
@@ -2369,16 +2805,20 @@ mod tests {
     #[test]
     fn test_scope_allows_on_topic() {
         let mut e = ConservationEnforcer::new(policies::scope_discipline_policy(50, 10), 1000);
-        let r = e.enforce("Python programming language tutorial",
-            "Python is a great programming language for beginners");
+        let r = e.enforce(
+            "Python programming language tutorial",
+            "Python is a great programming language for beginners",
+        );
         assert!(r.allowed);
     }
 
     #[test]
     fn test_scope_blocks_off_topic() {
         let mut e = ConservationEnforcer::new(policies::scope_discipline_policy(500, 10), 1000);
-        let r = e.enforce("quantum physics particles energy",
-            "banana apple orange grape melon fruit");
+        let r = e.enforce(
+            "quantum physics particles energy",
+            "banana apple orange grape melon fruit",
+        );
         assert!(!r.allowed);
         assert!(r.violation.unwrap().reason.to_lowercase().contains("scope"));
     }
@@ -2442,8 +2882,7 @@ mod tests {
     fn test_combined_with_density() {
         let policy = policies::combined_policy(10000, 500, 0, 0, 300, false, 0);
         let mut e = ConservationEnforcer::new(policy, 10000);
-        let r = e.enforce("Write something",
-            "blah blah blah blah blah blah blah");
+        let r = e.enforce("Write something", "blah blah blah blah blah blah blah");
         assert!(!r.allowed);
     }
 
