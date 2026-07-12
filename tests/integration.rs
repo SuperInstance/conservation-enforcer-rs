@@ -377,6 +377,29 @@ fn syscall_unique_ratio() {
     assert_eq!(vm.regs.get(0), 600);
 }
 
+// The per-mille ratios are computed as `count * 1000 / total`. With u32
+// arithmetic, `count * 1000` overflows once a word appears more than
+// ~4.29M times (panic in debug, wrap in release). The math must use a
+// wider intermediate so large inputs cannot trigger undefined behaviour
+// or silently wrong results.
+#[test]
+fn syscall_ratios_no_overflow_on_large_input() {
+    // 4.500.000 identical tokens: max_count * 1000 = 4.5e9 > u32::MAX.
+    let big = "x ".repeat(4_500_000);
+    let mut vm = FluxVM::new();
+    vm.load_output(&big);
+
+    // GET_REPETITION (syscall 6): all-same input -> 1000 per-mille.
+    let code = vec![Op::Movi as u8, 0, 6, 0, Op::Syscall as u8, Op::Halt as u8];
+    vm.run(&code).unwrap();
+    assert_eq!(vm.regs.get(0), 1000);
+
+    // GET_UNIQUE_RATIO (syscall 11): 1 unique / 4.5M total -> 0 per-mille.
+    let code = vec![Op::Movi as u8, 0, 11, 0, Op::Syscall as u8, Op::Halt as u8];
+    vm.run(&code).unwrap();
+    assert_eq!(vm.regs.get(0), 0);
+}
+
 #[test]
 fn syscall_violation_flag() {
     let code = vec![

@@ -638,21 +638,23 @@ impl FluxVM {
                 if words.is_empty() {
                     self.regs.set(0, 0);
                 } else {
-                    let mut max_count = 0u32;
-                    // simple word frequency
-                    for i in 0..words.len() {
-                        let w = words[i];
-                        let mut c = 0u32;
-                        for j in 0..words.len() {
-                            if words[j] == w {
-                                c += 1;
-                            }
+                    let total = words.len() as u64;
+                    let mut max_count = 0u64;
+                    let mut seen: Vec<&str> = Vec::new();
+                    // Count the frequency of each distinct word once (the result is
+                    // the maximum frequency). Arithmetic is done in u64 so that
+                    // `count * 1000` cannot overflow for large inputs.
+                    for w in &words {
+                        if seen.contains(w) {
+                            continue;
                         }
+                        seen.push(*w);
+                        let c = words.iter().filter(|&&x| x == *w).count() as u64;
                         if c > max_count {
                             max_count = c;
                         }
                     }
-                    self.regs.set(0, (max_count * 1000) / words.len() as u32);
+                    self.regs.set(0, ((max_count * 1000) / total) as u32);
                 }
             }
             syscall::GET_CATEGORY => {
@@ -663,14 +665,10 @@ impl FluxVM {
                 if ow.is_empty() {
                     self.regs.set(0, 0);
                 } else {
-                    let iw_set: Vec<&str> = iw.into_iter().collect();
-                    let mut overlap = 0u32;
-                    for w in &ow {
-                        if iw_set.contains(w) {
-                            overlap += 1;
-                        }
-                    }
-                    let score = core::cmp::min(1000, (overlap * 1000) / ow.len() as u32);
+                    let total = ow.len() as u64;
+                    let overlap = ow.iter().filter(|w| iw.contains(*w)).count() as u64;
+                    let raw = ((overlap * 1000) / total) as u32;
+                    let score = core::cmp::min(1000, raw);
                     self.regs.set(0, score);
                 }
             }
@@ -687,14 +685,15 @@ impl FluxVM {
                 if words.is_empty() {
                     self.regs.set(0, 1000);
                 } else {
-                    let mut unique = Vec::new();
+                    let total = words.len() as u64;
+                    let mut unique: Vec<&str> = Vec::new();
                     for w in &words {
                         if !unique.contains(w) {
                             unique.push(*w);
                         }
                     }
                     self.regs
-                        .set(0, ((unique.len() as u32) * 1000) / words.len() as u32);
+                        .set(0, (((unique.len() as u64) * 1000) / total) as u32);
                 }
             }
             syscall::GET_ENTROPY => {
