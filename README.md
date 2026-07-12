@@ -3,15 +3,20 @@
 ![Crates.io](https://img.shields.io/crates/v/si-conservation-enforcer)
 ![Rust](https://img.shields.io/badge/rust-stable-orange)
 ![Tests](https://img.shields.io/badge/tests-95%2B-brightgreen)
+![no_std](https://img.shields.io/badge/no__std-compatible-blue)
 ![License](https://img.shields.io/github/license/SuperInstance/conservation-enforcer-rs)
 
-**FLUX bytecode conservation-law enforcement for LLM outputs — Rust implementation.**
+**FLUX bytecode conservation-law enforcement for LLM outputs.**
 
-This is the Rust port of the [Python conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer), providing a deterministic, auditable policy layer that wraps any LLM call. It demonstrates that AI behavior can be governed by conservation laws — the same mathematical principles that govern physics.
+A deterministic, auditable policy layer that wraps any LLM call — proving that AI behavior can be governed by the same mathematical conservation principles that govern physics. This is the Rust port of the [Python conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer), built for zero-dependency, `no_std`-capable deployment.
+
+---
 
 ## Philosophy
 
 Part of [Working Animal Architecture](https://github.com/SuperInstance/AI-Writings), where **γ + η = C** (genome + nurture = capability). Conservation enforcement is the **fence** — the physical boundary that keeps working animals on-task. Just as a fence doesn't judge the animal, FLUX bytecode doesn't judge the model. It just enforces.
+
+> *You can't lie to bytecode. It doesn't have opinions, it just executes instructions.*
 
 ```
 User Request → LLM Call → [FLUX Conservation Validator] → Response
@@ -20,15 +25,15 @@ User Request → LLM Call → [FLUX Conservation Validator] → Response
                               If clean: return response
 ```
 
-The FLUX bytecode acts as a deterministic, auditable policy layer. **You can't lie to bytecode** — it doesn't have opinions, it just executes instructions.
-
 ## Why Rust?
 
-- **Zero-cost abstractions** — The entire VM, assembler, and enforcement layer adds negligible overhead
-- **No_std compatible** — Works in embedded, WASM, and kernel contexts (use `default-features = false`)
-- **No external dependencies** — The entire crate is self-contained
-- **Memory safe** — Rust's ownership model guarantees no UB in the policy VM
-- **Deterministic** — Same input + bytecode = same output, every time
+| Property | Benefit |
+|----------|---------|
+| **Zero-cost abstractions** | The entire VM, assembler, and enforcement layer adds negligible overhead |
+| **`no_std` compatible** | Works in embedded, WASM, and kernel contexts (`default-features = false`) |
+| **Zero external dependencies** | The entire crate is self-contained — no transitive dependency risk |
+| **Memory safe** | Rust's ownership model guarantees no UB in the policy VM |
+| **Deterministic** | Same input + bytecode = same output, every time |
 
 ## Installation
 
@@ -36,25 +41,35 @@ The FLUX bytecode acts as a deterministic, auditable policy layer. **You can't l
 cargo add si-conservation-enforcer
 ```
 
-Or add to your `Cargo.toml`:
+Or in `Cargo.toml`:
 
 ```toml
 [dependencies]
 si-conservation-enforcer = "0.1"
 ```
 
+For `no_std` / embedded / WASM:
+
+```toml
+[dependencies]
+si-conservation-enforcer = { version = "0.1", default-features = false }
+```
+
 ## Quick Start
+
+### Basic enforcement
 
 ```rust
 use conservation_enforcer::{ConservationEnforcer, policies::combined_policy};
 
 fn main() {
+    // Combined policy: length + repetition + category + entropy
     let policy = combined_policy(
         500,    // max_tokens
         300,    // max_repetition (30%)
-        100,    // min_overlap (10%)
-        1500,   // min_entropy
-        0,      // min_density (disabled)
+        100,    // min_overlap (10% word overlap with input)
+        1500,   // min_entropy (1.5 bits/word)
+        0,      // min_density (0 = disabled)
         false,  // enable_decay
         0,      // decay_rate
     );
@@ -67,103 +82,85 @@ fn main() {
     );
 
     if result.allowed {
-        println!("{}", result.output);
+        println!("✅ {}", result.output);
     } else {
-        println!("Blocked: {}", result.violation.unwrap().reason);
+        println!("🚫 {}", result.violation.unwrap().reason);
     }
 }
 ```
 
-## OpenAI Integration
+### Wrap any LLM call
 
 ```rust
 use conservation_enforcer::{ConservationEnforcer, policies::length_budget_policy};
 
-fn main() {
-    let mut enforcer = ConservationEnforcer::new(length_budget_policy(500), 500);
+let mut enforcer = ConservationEnforcer::new(length_budget_policy(500), 500);
 
-    // Call your LLM here (e.g., via async-openai, reqwest, etc.)
-    let llm_response = call_your_llm("Tell me about quantum physics");
-
-    let result = enforcer.enforce("Tell me about quantum physics", &llm_response);
-
-    match result.allowed {
-        true => println!("{}", result.output),
-        false => println!("🚫 {}", result.output),
-    }
-}
-
-fn call_your_llm(prompt: &str) -> String {
-    // Your LLM call here
-    String::from("...")
-}
+let result = enforcer.enforce_with_llm("Explain quantum computing", |prompt| {
+    // Your LLM call here (async-openai, reqwest, etc.)
+    call_your_llm(prompt)
+});
 ```
 
-## Enforcement in Action
+### Catch violations in action
 
 ```rust
-use conservation_enforcer::{ConservationEnforcer, policies::combined_policy};
+let policy = policies::repetition_policy(300); // max 30% repetition
+let mut enforcer = ConservationEnforcer::new(policy, 1000);
 
-fn main() {
-    let policy = combined_policy(500, 300, 100, 1500, 300, false, 0);
-    let mut enforcer = ConservationEnforcer::new(policy, 500);
-
-    // ✅ Good response
-    let r1 = enforcer.enforce("What is AI?", "AI is the simulation of human intelligence in machines.");
-    println!("{} {} cycles", if r1.allowed { "✅" } else { "🚫" }, r1.cycles);
-
-    // 🚫 Too repetitive
-    let r2 = enforcer.enforce("Summarize", "the the the the the the the the the the");
-    println!("{} {}", if r2.allowed { "✅" } else { "🚫" },
-        r2.violation.map(|v| v.reason).unwrap_or_default());
-}
+// 🚫 Too repetitive — blocked
+let r = enforcer.enforce("Summarize", "the the the the the the the the");
+assert!(!r.allowed);
+assert_eq!(r.violation.unwrap().reason, "Excessive repetition detected");
 ```
 
 ## Conservation Laws
 
-### 1. Length Budget (Information Quantity)
+Seven conservation laws, each analogous to a thermodynamic principle:
+
+### 1. Length Budget *(Information Quantity)*
 ```rust
 let policy = policies::length_budget_policy(500);
 ```
-The output cannot exceed the allocated information budget. Analogous to energy conservation — you can't output more information than allocated.
+Output cannot exceed the allocated information budget. Like energy conservation — you can't output more information than allocated.
 
-### 2. Repetition Limit (Information Diversity)
+### 2. Repetition Limit *(Information Diversity)*
 ```rust
-let policy = policies::repetition_policy(300); // max 30% repetition
+let policy = policies::repetition_policy(300); // max 30%
 ```
-The output must maintain diversity. Degenerate repetition is the informational equivalent of thermal equilibrium.
+Output must maintain word diversity. Degenerate repetition is the informational equivalent of thermal equilibrium.
 
-### 3. Category Confinement (Topical Coherence)
+### 3. Category Confinement *(Topical Coherence)*
 ```rust
-let policy = policies::category_policy(150); // 15% word overlap required
+let policy = policies::category_policy(150); // 15% overlap required
 ```
-The output must stay within the category/domain of the input.
+Output must stay within the semantic domain of the input.
 
-### 4. Entropy Floor (Information Density)
+### 4. Entropy Floor *(Information Density)*
 ```rust
 let policy = policies::entropy_policy(2000); // 2.0 bits/word minimum
 ```
-The output must have sufficient Shannon entropy.
+Output must have sufficient Shannon entropy — no low-information rambling.
 
-### 5. Information Density (Token Efficiency)
+### 5. Information Density *(Token Efficiency)*
 ```rust
 let policy = policies::information_density_policy(400); // 40% unique tokens
 ```
-Measures the ratio of unique tokens to total tokens.
+Ratio of unique tokens to total tokens must meet threshold.
 
-### 6. Scope Discipline (Topic Boundary)
+### 6. Scope Discipline *(Topic Boundary)*
 ```rust
 let policy = policies::scope_discipline_policy(120, 10);
 ```
-Checks topical overlap AND limits output expansion to 10× input lengths.
+Topical overlap check AND output length expansion limit (10× input).
 
-### 7. Budget Decay (Temporal Conservation)
+### 7. Budget Decay *(Temporal Conservation)*
 ```rust
 let policy = policies::budget_decay_policy(50, 10, 100);
 ```
-The enforcement budget itself is a conserved quantity. Each call consumes budget.
+The enforcement budget itself is a conserved quantity that decays with each call.
 
-### Combined Policy (All Laws)
+### Combined Policy *(All Laws)*
 ```rust
 let policy = policies::combined_policy(
     500,    // max_tokens
@@ -176,121 +173,220 @@ let policy = policies::combined_policy(
 );
 ```
 
-## FLUX ISA
+## API Reference
 
-| Format | Layout | Example |
-|--------|--------|---------|
-| A | `[opcode]` | `HALT` |
-| B | `[opcode][reg]` | `INC R0` |
-| C | `[opcode][rd][rs]` | `CMP R0, R1` |
-| D | `[opcode][reg][off_lo][off_hi]` | `JE label` |
-| E | `[opcode][rd][rs1][rs2]` | `IADD R0, R1, R2` |
+### `ConservationEnforcer`
+
+| Method | Description |
+|--------|-------------|
+| `new(policy, budget)` | Create enforcer with FLUX bytecode policy and conservation budget |
+| `with_options(policy, budget, correction_template)` | Create with custom correction message template |
+| `enforce(input, output)` | Check an LLM output; returns `EnforcementResult` |
+| `enforce_with_llm(input, llm_fn)` | Call LLM and enforce in one step |
+| `remaining_budget()` | Current remaining conservation budget |
+| `replenish_budget(amount)` | Add to budget |
+| `reset_budget()` | Reset to initial value |
+| `call_count()` | Number of enforcement calls made |
+| `enable_audit(path)` | Enable JSONL audit logging (`audit` feature) |
+
+### `EnforcementResult`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `allowed` | `bool` | Whether the output passed conservation checks |
+| `output` | `String` | The output text (or correction message if blocked) |
+| `violation` | `Option<Violation>` | Violation details if blocked |
+| `cycles` | `u64` | VM cycles consumed |
+
+### `FluxVM`
+
+The register-based FLUX virtual machine at the core:
+
+```rust
+use conservation_enforcer::{FluxVM, Op};
+
+let mut vm = FluxVM::new();
+vm.load_input("hello");
+vm.load_output("world");
+
+// Hand-assembled bytecode: MOVI R0, 1; SYSCALL; HALT
+let code = vec![Op::Movi as u8, 0, 1, 0, Op::Syscall as u8, Op::Halt as u8];
+let r0 = vm.run(&code).unwrap();
+assert_eq!(r0, 5); // input length
+```
+
+## FLUX Instruction Set
+
+### Formats
+
+| Format | Size | Layout | Example Instructions |
+|--------|------|--------|---------------------|
+| A | 1 byte | `[opcode]` | `NOP`, `HALT`, `YIELD`, `SYSCALL` |
+| B | 2 bytes | `[opcode][reg]` | `INC R0`, `DEC R1`, `PUSH R2` |
+| C | 3 bytes | `[opcode][rd][rs]` | `MOV R0, R1`, `CMP R0, R1` |
+| D | 4 bytes | `[opcode][reg][imm16]` | `MOVI R0, 42`, `JMP label` |
+| E | 4 bytes | `[opcode][rd][rs1][rs2]` | `IADD R0, R1, R2` |
 
 ### Syscalls
 
-| # | Name | Returns |
-|---|------|---------|
-| 1 | GET_INPUT_LEN | Length of input text |
-| 2 | GET_OUTPUT_LEN | Length of output text |
-| 3 | GET_INPUT_WORDS | Word count of input |
-| 4 | GET_OUTPUT_WORDS | Word count of output |
-| 5 | GET_TOKEN_COUNT | Approximate token count |
-| 6 | GET_REPETITION | Max word frequency ratio × 1000 |
-| 7 | GET_CATEGORY | Input/output word overlap × 1000 |
-| 8 | SET_VIOLATION | Sets violation flag (R1 = reason code) |
-| 10 | GET_BUDGET | Configured information budget |
-| 11 | GET_UNIQUE_RATIO | Unique/total words × 1000 |
-| 12 | GET_ENTROPY | Shannon entropy × 1000 |
-| 13 | GET_CALL_COUNT | Enforcement calls in this session |
-| 14 | DECAY_BUDGET | R1 = decay amount, returns new budget |
+| # | Name | Returns in R0 |
+|---|------|---------------|
+| 1 | `GET_INPUT_LEN` | Length of input text |
+| 2 | `GET_OUTPUT_LEN` | Length of output text |
+| 3 | `GET_INPUT_WORDS` | Word count of input |
+| 4 | `GET_OUTPUT_WORDS` | Word count of output |
+| 5 | `GET_TOKEN_COUNT` | Approximate token count (len/4) |
+| 6 | `GET_REPETITION` | Max word frequency ratio × 1000 |
+| 7 | `GET_CATEGORY` | Input/output word overlap × 1000 |
+| 8 | `SET_VIOLATION` | Sets violation flag (R1 = reason code) |
+| 10 | `GET_BUDGET` | Current information budget |
+| 11 | `GET_UNIQUE_RATIO` | Unique/total words × 1000 |
+| 12 | `GET_ENTROPY` | Shannon entropy × 1000 |
+| 13 | `GET_CALL_COUNT` | Enforcement calls this session |
+| 14 | `DECAY_BUDGET` | R1 = decay; returns new budget |
 
-## Writing Custom Policies
-
-Use the `assemble()` function to compile FLUX assembly:
+### Writing Custom Policies
 
 ```rust
 use conservation_enforcer::{assemble, ConservationEnforcer};
 
-fn main() {
-    let code = assemble(r#"
-        ;; Block if unique ratio < 30%
-        MOVI R0, 11             ; GET_UNIQUE_RATIO
-        SYSCALL
-        MOV  R2, R0
-        MOVI R3, 300            ; threshold
-        JLT  R2, R3, block
-        MOVI R0, 0              ; ALLOW
-        HALT
+let bytecode = assemble(r#"
+    ;; Block outputs with < 30% unique tokens
+    MOVI R0, 11             ; GET_UNIQUE_RATIO
+    SYSCALL
+    MOV  R2, R0
+    MOVI R3, 300            ; threshold (30%)
+    JLT  R2, R3, block
+    MOVI R0, 0              ; ALLOW
+    HALT
+block:
+    MOVI R1, 5              ; reason: information density
+    MOVI R0, 8              ; SET_VIOLATION
+    SYSCALL
+    MOVI R0, 1              ; BLOCK
+    HALT
+"#).unwrap();
 
-    block:
-        MOVI R1, 5              ; reason: INFORMATION_DENSITY
-        MOVI R0, 8              ; SET_VIOLATION
-        SYSCALL
-        MOVI R0, 1              ; BLOCK
-        HALT
-    "#).unwrap();
-
-    let mut enforcer = ConservationEnforcer::new(code, 1000);
-    let result = enforcer.enforce("test", "hello world foo bar baz");
-    println!("Allowed: {}", result.allowed);
-}
+let mut enforcer = ConservationEnforcer::new(bytecode, 1000);
 ```
+
+### Pseudo-instructions
+
+The assembler supports higher-level pseudo-instructions that expand to multiple real instructions:
+
+| Pseudo | Expands To | Format |
+|--------|-----------|--------|
+| `JGE Rd, Rs, label` | `CMP Rd, Rs; JSGE label` | Compare and jump if ≥ |
+| `JGT Rd, Rs, label` | `CMP Rd, Rs; JE +4; JSGE label` | Compare and jump if > |
+| `JLE Rd, Rs, label` | `CMP Rd, Rs; JE label; JSLT label` | Compare and jump if ≤ |
+| `JLT Rd, Rs, label` | `CMP Rd, Rs; JSLT label` | Compare and jump if < |
 
 ## Feature Flags
 
 | Feature | Default | Description |
 |---------|---------|-------------|
-| `std` | ✅ | Standard library (alloc, file I/O) |
+| `std` | ✅ | Standard library (alloc, file I/O, String) |
 | `audit` | ❌ | JSON Lines audit logging to files |
 | `metrics` | ❌ | Metrics collection and export |
 
-For `no_std` environments:
-```toml
-[dependencies]
-si-conservation-enforcer = { version = "0.1", default-features = false }
+### Audit Logging
+
+```rust
+// Enable audit feature in Cargo.toml:
+// si-conservation-enforcer = { version = "0.1", features = ["audit"] }
+
+let mut enforcer = ConservationEnforcer::new(policy, 1000);
+enforcer.enable_audit("audit.jsonl");
+
+// Every enforcement call is logged:
+// {"timestamp":"2025-01-15T12:00:00Z","input_hash":"...","allowed":true,...}
 ```
 
-## Cross-Implementation
+### Metrics Collection
 
-This component exists in two languages:
-- **Python** (`pip install conservation-enforcer`) — [SuperInstance/conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer)
-- **Rust** (`cargo add si-conservation-enforcer`) — [SuperInstance/conservation-enforcer-rs](https://github.com/SuperInstance/conservation-enforcer-rs)
+```rust
+// Enable metrics feature:
+// si-conservation-enforcer = { version = "0.1", features = ["metrics"] }
 
-Both implement the same specification. Choose based on your runtime.
+use conservation_enforcer::metrics::MetricsCollector;
 
-### Detailed Comparison
+let mut metrics = MetricsCollector::new();
+metrics.record(result.allowed, result.violation.as_ref().map(|v| v.reason.as_str()), result.cycles, 1000, enforcer.remaining_budget());
 
-This crate is a line-by-line port of the [Python conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer) v0.2.0. The Python version's test suite (95 tests) has been replicated in Rust. The bytecode produced by the assembler is binary-compatible — you can assemble a policy in Python and execute it in Rust, and vice versa.
-
-| Component | Python | Rust |
-|-----------|--------|------|
-| FLUX VM | `conservation_enforcer.vm.VM` | `FluxVM` |
-| Assembler | `conservation_enforcer.assembler.assemble()` | `conservation_enforcer::assemble()` |
-| Enforcer | `ConservationEnforcer` | `ConservationEnforcer` |
-| Policies | `policies/` module | `policies` module |
-| Audit | `audit.AuditLog` | `audit::AuditLog` (feature-gated) |
-| Metrics | `metrics.MetricsCollector` | `metrics::MetricsCollector` (feature-gated) |
+let snapshot = metrics.snapshot();
+println!("Block rate: {:.1}%", snapshot.block_rate * 100.0);
+```
 
 ## Architecture
 
 ```
 src/
-└── lib.rs          Entire crate (VM, assembler, enforcer, policies, audit, metrics)
-
-tests/
-└── integration.rs  Comprehensive test suite (95+ tests)
+└── lib.rs
+    ├── Op (opcode enum, 33 instructions)
+    ├── syscall (14 syscall numbers)
+    ├── VmError (division by zero, invalid opcode, cycle exhaustion)
+    ├── RegisterFile (16 × u32 registers + zero/sign flags)
+    ├── Memory (byte-addressable, i32 load/store)
+    ├── FluxVM (the virtual machine)
+    │   ├── step() — decode + execute one instruction
+    │   ├── do_syscall() — 14 conservation syscalls
+    │   └── decode_b/c/d/e() — instruction format decoders
+    ├── Violation / EnforcementResult
+    ├── ConservationEnforcer (high-level API)
+    ├── assembler (FLUX assembly → bytecode)
+    ├── policies (7 pre-built conservation policies)
+    ├── audit (JSONL audit log, feature-gated)
+    └── metrics (MetricsCollector, feature-gated)
 ```
+
+### No External Dependencies
+
+The entire crate — VM, assembler, enforcer, policies, audit, metrics — has **zero external dependencies**. The `log2` approximation is implemented from scratch for `no_std` compatibility.
+
+## Testing
+
+```bash
+# Run all 95+ tests
+cargo test
+
+# Run with output
+cargo test -- --nocapture
+
+# Run specific test category
+cargo test test_vm_   # VM arithmetic and control flow
+cargo test test_syscall_  # Syscall behavior
+cargo test test_assemble  # Assembler
+cargo test test_enforcer  # Enforcement integration
+cargo test test_policy_   # Policy compilation
+```
+
+## Cross-Implementation
+
+| Aspect | Python | Rust |
+|--------|--------|------|
+| Package | `pip install conservation-enforcer` | `cargo add si-conservation-enforcer` |
+| Repo | [conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer) | [conservation-enforcer-rs](https://github.com/SuperInstance/conservation-enforcer-rs) (this) |
+| Dependencies | stdlib only | zero external deps |
+| `no_std` | N/A | ✅ (`default-features = false`) |
+| Bytecode compat | ✅ | ✅ — binary-compatible bytecode |
+
+The same FLUX bytecode runs on both implementations. You can assemble a policy in Python and execute it in Rust, and vice versa.
 
 ## Ecosystem
 
 ### FLUX Runtime
-- [conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer) — Python VM (`pip install conservation-enforcer`)
-- [conservation-enforcer-rs](https://github.com/SuperInstance/conservation-enforcer-rs) — Rust VM (this crate)
+- [conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer) — Python original (`pip install conservation-enforcer`)
+- **conservation-enforcer-rs** — Rust port (this crate)
 - [flux-core](https://github.com/SuperInstance/flux-core) — Core Rust VM (`cargo add fluxvm`)
 
-### Conservation
-- [conservation-law-rs](https://github.com/SuperInstance/conservation-law-rs) — Conservation laws for agent dynamics (Rust)
+### Policy Infrastructure
 - [flux-registry](https://github.com/SuperInstance/flux-registry) — Pre-compiled policy registry
+- [flux-policy-tester](https://github.com/SuperInstance/flux-policy-tester) — Testing framework for policies
+- [flux-compiler](https://github.com/SuperInstance/flux-compiler-rs) — Bytecode assembler/disassembler/validator
+
+### Conservation Theory
+- [conservation-law-rs](https://github.com/SuperInstance/conservation-law-rs) — Conservation laws for agent dynamics
+- [AI-Writings](https://github.com/SuperInstance/AI-Writings) — Paradigm essays
 
 ## License
 
