@@ -9,6 +9,10 @@
 
 This is the Rust port of the [Python conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer), providing a deterministic, auditable policy layer that wraps any LLM call. It demonstrates that AI behavior can be governed by conservation laws — the same mathematical principles that govern physics.
 
+## Philosophy
+
+Part of [Working Animal Architecture](https://github.com/SuperInstance/AI-Writings), where **γ + η = C** (genome + nurture = capability). Conservation enforcement is the **fence** — the physical boundary that keeps working animals on-task. Just as a fence doesn't judge the animal, FLUX bytecode doesn't judge the model. It just enforces.
+
 ```
 User Request → LLM Call → [FLUX Conservation Validator] → Response
                                     ↓
@@ -151,7 +155,7 @@ Measures the ratio of unique tokens to total tokens.
 ```rust
 let policy = policies::scope_discipline_policy(120, 10);
 ```
-Checks topical overlap AND limits output expansion to 10× input length.
+Checks topical overlap AND limits output expansion to 10× input lengths.
 
 ### 7. Budget Decay (Temporal Conservation)
 ```rust
@@ -266,6 +270,7 @@ This crate is a line-by-line port of the [Python conservation-enforcer](https://
 | Policies | `policies/` module | `policies` module |
 | Audit | `audit.AuditLog` | `audit::AuditLog` (feature-gated) |
 | Metrics | `metrics.MetricsCollector` | `metrics::MetricsCollector` (feature-gated) |
+
 ## Architecture
 
 ```
