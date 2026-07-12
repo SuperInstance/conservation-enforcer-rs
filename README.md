@@ -246,7 +246,15 @@ For `no_std` environments:
 si-conservation-enforcer = { version = "0.1", default-features = false }
 ```
 
-## Cross-Reference with Python
+## Cross-Implementation
+
+This component exists in two languages:
+- **Python** (`pip install conservation-enforcer`) — [SuperInstance/conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer)
+- **Rust** (`cargo add si-conservation-enforcer`) — [SuperInstance/conservation-enforcer-rs](https://github.com/SuperInstance/conservation-enforcer-rs)
+
+Both implement the same specification. Choose based on your runtime.
+
+### Detailed Comparison
 
 This crate is a line-by-line port of the [Python conservation-enforcer](https://github.com/SuperInstance/conservation-enforcer) v0.2.0. The Python version's test suite (95 tests) has been replicated in Rust. The bytecode produced by the assembler is binary-compatible — you can assemble a policy in Python and execute it in Rust, and vice versa.
 
@@ -258,7 +266,6 @@ This crate is a line-by-line port of the [Python conservation-enforcer](https://
 | Policies | `policies/` module | `policies` module |
 | Audit | `audit.AuditLog` | `audit::AuditLog` (feature-gated) |
 | Metrics | `metrics.MetricsCollector` | `metrics::MetricsCollector` (feature-gated) |
-
 ## Architecture
 
 ```
