@@ -1711,6 +1711,7 @@ pub mod audit {
             }
         }
 
+        #[allow(clippy::too_many_arguments)]
         pub fn log(
             &self,
             input_text: &str,
@@ -1742,10 +1743,22 @@ pub mod audit {
             }
         }
 
-        pub fn read_all(&self) -> Vec<serde_lite::JsonValue> {
-            // Lightweight: we don't depend on serde, so we parse manually
-            // For now, return raw lines
-            Vec::new()
+        /// Read all non-empty audit records as raw JSON Lines strings.
+        ///
+        /// This crate intentionally avoids a JSON dependency, so records are
+        /// returned as raw JSONL strings for the caller to parse or inspect.
+        /// Returns an empty vector if the audit file does not exist or cannot
+        /// be read.
+        pub fn read_all(&self) -> Vec<String> {
+            match fs::read_to_string(&self.path) {
+                Ok(content) => content
+                    .lines()
+                    .map(str::trim)
+                    .filter(|l| !l.is_empty())
+                    .map(str::to_string)
+                    .collect(),
+                Err(_) => Vec::new(),
+            }
         }
 
         pub fn summary(&self) -> AuditSummary {
@@ -1808,11 +1821,6 @@ pub mod audit {
         } else {
             0
         }
-    }
-
-    // Minimal JSON value type placeholder
-    mod serde_lite {
-        pub enum JsonValue {}
     }
 }
 

@@ -1090,3 +1090,53 @@ fn combined_with_decay() {
     let r2 = e.enforce("q", "a reasonable response here");
     assert!(!r2.allowed);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Audit (feature-gated)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+#[cfg(feature = "audit")]
+#[test]
+fn audit_log_read_all_returns_logged_lines() {
+    use conservation_enforcer::audit::AuditLog;
+
+    let path = std::env::temp_dir().join(format!(
+        "conservation_enforcer_audit_{}.jsonl",
+        std::process::id()
+    ));
+    // Start from a clean file.
+    let log = AuditLog::new(path.to_str().unwrap());
+    log.clear();
+    assert!(log.read_all().is_empty());
+
+    log.log("question", "answer", true, None, 0, 12, 500, 1);
+    log.log(
+        "question",
+        "answer",
+        false,
+        Some("Length budget exceeded"),
+        1,
+        7,
+        500,
+        2,
+    );
+
+    let records = log.read_all();
+    assert_eq!(
+        records.len(),
+        2,
+        "read_all must return the two logged records"
+    );
+    assert!(records[0].contains(r#""allowed":true"#));
+    assert!(records[1].contains(r#""allowed":false"#));
+    assert!(records[1].contains(r#""violation_code":1"#));
+
+    // summary() must agree with the raw records.
+    let s = log.summary();
+    assert_eq!(s.total_calls, 2);
+    assert_eq!(s.total_blocked, 1);
+
+    log.clear();
+    assert!(log.read_all().is_empty());
+    let _ = std::fs::remove_file(&path);
+}
