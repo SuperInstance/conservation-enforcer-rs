@@ -477,6 +477,33 @@ fn length_correction_message() {
     assert!(result.output.contains("🚫 Blocked:"));
 }
 
+// The threshold must be the `max_tokens` parameter, NOT the enforcer's
+// conservation budget. Earlier the policy compared the token count against
+// `GET_BUDGET`, so passing a small `max_tokens` with a large budget let
+// oversized outputs through. These two cases pin the threshold to
+// `max_tokens` regardless of the budget.
+
+#[test]
+fn length_threshold_is_max_tokens_not_budget() {
+    // max_tokens = 3 (tiny), budget = 1_000_000 (huge).
+    // Output "word " * 100 -> 500 chars -> ~125 tokens, well above 3.
+    // Must be blocked even though the budget is enormous.
+    let mut e = ConservationEnforcer::new(policies::length_budget_policy(3), 1_000_000);
+    let result = e.enforce("Tell me everything", &"word ".repeat(100));
+    assert!(!result.allowed);
+    assert!(result.violation.unwrap().reason.contains("Length budget"));
+}
+
+#[test]
+fn length_allows_under_max_tokens_even_when_budget_low() {
+    // max_tokens = 1000 (large), budget = 3 (tiny).
+    // Output of 24 chars -> ~6 tokens: above the budget of 3 but well under
+    // max_tokens of 1000. Must be allowed: the budget is not the length gate.
+    let mut e = ConservationEnforcer::new(policies::length_budget_policy(1000), 3);
+    let result = e.enforce("Q", "a short response here");
+    assert!(result.allowed);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Repetition Policy
 // ═══════════════════════════════════════════════════════════════════════════════

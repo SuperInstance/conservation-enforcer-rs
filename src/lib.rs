@@ -1374,15 +1374,18 @@ pub mod policies {
     use super::assemble;
 
     /// Enforce a maximum output length (approximate token count).
+    ///
+    /// `max_tokens` is the hard limit on the approximate token count of the
+    /// output (`len/4`). The output is blocked when the token count exceeds
+    /// `max_tokens`. Note that the value is encoded as a 16-bit FLUX
+    /// immediate, so it must fit in `0..=65535`.
     pub fn length_budget_policy(max_tokens: i32) -> Vec<u8> {
         assemble(&format!(
             r#"
             MOVI R0, 5
             SYSCALL
             MOV  R2, R0
-            MOVI R0, 10
-            SYSCALL
-            MOV  R3, R0
+            MOVI R3, {max_tokens}
             JGT  R2, R3, block
             MOVI R0, 0
             HALT
@@ -1614,9 +1617,7 @@ exhausted:
             MOVI R0, 5
             SYSCALL
             MOV  R2, R0
-            MOVI R0, 10
-            SYSCALL
-            MOV  R3, R0
+            MOVI R3, {max_tokens}
             JGT  R2, R3, block_length
 
             MOVI R0, 6
