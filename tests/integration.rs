@@ -682,10 +682,15 @@ fn density_blocks_low() {
 
 #[test]
 fn density_boundary() {
-    // 1 unique out of 2 total = 500 per-mille, exactly at threshold → passes (JLT is strict)
     let mut e = ConservationEnforcer::new(policies::information_density_policy(500), 1000);
-    let result = e.enforce("test", "hello world");
-    assert!(result.allowed);
+    // "go go" -> 1 unique out of 2 total = 500 per-mille, exactly at the
+    // threshold. JLT is strict (<), so equal-to-threshold is allowed.
+    let at = e.enforce("test", "go go");
+    assert!(at.allowed);
+    // "go go go" -> 1 unique out of 3 total = 333 per-mille, just below the
+    // threshold, so it must be blocked.
+    let below = e.enforce("test", "go go go");
+    assert!(!below.allowed);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
