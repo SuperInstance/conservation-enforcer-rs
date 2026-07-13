@@ -6,6 +6,7 @@ authors = ["SuperInstance"]
 license = "MIT"
 description = "FLUX bytecode conservation-law enforcement for LLM outputs (Rust)"
 repository = "https://github.com/SuperInstance/conservation-enforcer-rs"
+homepage = "https://github.com/SuperInstance/conservation-enforcer-rs"
 keywords = ["flux", "conservation", "llm", "policy", "bytecode"]
 categories = ["wasm"]
 
