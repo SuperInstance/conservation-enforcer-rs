@@ -2,16 +2,16 @@
 name = "conservation-enforcer-rs"
 version = "0.1.0"
 edition = "2021"
-description = "Rust implementation of the Conservation Enforcer for FLUX bytecode conservation-law enforcement"
+description = "Conservation-law enforcement for LLM outputs, backed by a FLUX bytecode policy VM"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/SuperInstance/conservation-enforcer-rs"
 homepage = "https://github.com/SuperInstance/conservation-enforcer-rs"
 readme = "README.md"
-keywords = ["flux", "vm", "conservation", "enforcement", "llm", "ai"]
+keywords = ["flux", "vm", "conservation", "enforcement", "llm"]
 categories = ["virtualization", "embedded"]
 
 [dependencies]
-fluxvm = "0.1.0"
+fluxvm = "0.1.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"

@@ -1,35 +1,38 @@
 // conservation-enforcer-rs
-// A Rust implementation of the Conservation Enforcer for FLUX bytecode conservation-law enforcement.
+// Conservation-law enforcement for LLM outputs, backed by a FLUX VM policy.
+//
+// The policy bytecode is stored verbatim and re-executed against every
+// candidate LLM output. If the VM returns Ok(cycles) where cycles <= budget,
+// the output is allowed. If the VM errors out, or burns more cycles than the
+// configured budget, the output is blocked and a correction template is
+// returned instead.
 
-use fluxvm::{Interpreter, Error};
+use fluxvm::error::FluxError;
+use fluxvm::vm::Interpreter;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-/// Result of enforcing a conservation law on an LLM output.
+/// Verdict returned by `ConservationEnforcer::enforce`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EnforcementResult {
-    /// Whether the output is allowed.
+    /// Whether the LLM output is allowed through.
     pub allowed: bool,
-    /// The output (potentially corrected).
+    /// The (possibly corrected) text to hand back to the caller.
     pub output: String,
-    /// Optional violation if the output was blocked.
+    /// Set when the output was blocked. Carries the human-readable reason
+    /// and a numeric code matched against the FLUX VM's policy errors.
     pub violation: Option<Violation>,
-    /// Number of FLUX VM cycles executed.
+    /// Number of FLUX VM cycles the most recent `enforce` call consumed.
     pub cycles: u64,
 }
 
 impl EnforcementResult {
-    /// Create a new allowed result.
+    /// Build an "allowed" verdict carrying through the original LLM output.
     pub fn allowed(output: String) -> Self {
-        Self {
-            allowed: true,
-            output,
-            violation: None,
-            cycles: 0,
-        }
+        Self { allowed: true, output, violation: None, cycles: 0 }
     }
 
-    /// Create a new blocked result.
+    /// Build a "blocked" verdict with a correction string and a code.
     pub fn blocked(output: String, reason: String, code: i32) -> Self {
         Self {
             allowed: false,
@@ -40,37 +43,38 @@ impl EnforcementResult {
     }
 }
 
-/// A violation of a conservation law.
+/// One concrete violation of a conservation law.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Violation {
-    /// Human-readable reason for the violation.
+    /// Human-readable reason (e.g. "token budget exceeded").
     pub reason: String,
-    /// Error code from the FLUX policy.
+    /// Numeric code propagated from the FLUX policy.
     pub code: i32,
 }
 
-/// The main enforcement class.
+/// The main enforcer. Holds the policy bytecode and runs it against
+/// every LLM candidate output. Owns its own call counter and budget.
 pub struct ConservationEnforcer {
-    /// The FLUX VM that runs the policy bytecode.
-    pub vm: Interpreter,
-    /// The policy bytecode to execute.
+    /// Raw FLUX policy bytecode, executed on every `enforce` call.
     pub policy: Vec<u8>,
-    /// The conservation budget (e.g., maximum token count).
+    /// Current conservation budget (cycle allowance remaining).
     pub budget: i64,
-    /// Initial budget for replenishment tracking.
+    /// Snapshot of the budget at construction, used by `reset_budget`.
     initial_budget: i64,
-    /// Template for correction messages when output is blocked.
+    /// Replacement string handed back when output is blocked.
     pub correction_template: String,
-    /// Whether to enable audit logging.
+    /// When true, every `enforce` call is appended to `audit_path`.
     pub enable_audit: bool,
-    /// Path to audit log file.
+    /// JSONL file path for audit logs.
     pub audit_path: Option<String>,
-    /// Number of times enforce has been called.
+    /// Number of times `enforce` has been called.
     pub call_count: u64,
 }
 
 impl ConservationEnforcer {
-    /// Create a new ConservationEnforcer with the given policy bytecode and budget.
+    /// Construct a new enforcer. The policy bytecode is stored verbatim;
+    /// it is not dry-run at construction time. Errors during later
+    /// enforcement are reported in `EnforcementResult::violation`.
     pub fn new(
         policy: Vec<u8>,
         budget: i64,
@@ -78,14 +82,12 @@ impl ConservationEnforcer {
         enable_audit: bool,
         audit_path: Option<String>,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let mut vm = Interpreter::new();
-        vm.load_bytecode(&policy)?;
         let template = correction_template.unwrap_or_else(|| {
-            "⚠️ This response was blocked by a conservation law: {reason}. Please try again with a more conserved response."
+            "⚠️ This response was blocked by a conservation law: {reason}. \
+             Please try again with a more conserved response."
                 .to_string()
         });
         Ok(Self {
-            vm,
             policy,
             budget,
             initial_budget: budget,
@@ -96,7 +98,7 @@ impl ConservationEnforcer {
         })
     }
 
-    /// Load a policy from a binary file and create an enforcer.
+    /// Load policy bytecode from a binary file and construct the enforcer.
     pub fn from_policy_file<P: AsRef<Path>>(
         path: P,
         budget: i64,
@@ -108,23 +110,24 @@ impl ConservationEnforcer {
         Self::new(bytecode, budget, correction_template, enable_audit, audit_path)
     }
 
-    /// Save the current policy bytecode to a file.
+    /// Persist the current policy bytecode to a file.
     pub fn save_policy<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<dyn std::error::Error>> {
         std::fs::write(path, &self.policy)?;
         Ok(())
     }
 
-    /// Get the number of times enforce has been called.
+    /// Number of times `enforce` has been called on this enforcer.
     pub fn call_count(&self) -> u64 {
         self.call_count
     }
 
-    /// Get the remaining budget.
+    /// Remaining conservation budget (in cycles).
     pub fn remaining_budget(&self) -> i64 {
         self.budget
     }
 
-    /// Replenish the conservation budget (e.g., after cooldown).
+    /// Add cycles back to the budget (e.g. after a cooldown).
+    /// Panics on negative amounts; replenishment must be non-negative.
     pub fn replenish_budget(&mut self, amount: i64) {
         if amount < 0 {
             panic!("replenish amount must be non-negative");
@@ -132,32 +135,64 @@ impl ConservationEnforcer {
         self.budget += amount;
     }
 
-    /// Reset the budget to the initial value.
+    /// Restore the budget to its initial value.
     pub fn reset_budget(&mut self) {
         self.budget = self.initial_budget;
     }
 
-    /// Enforce conservation laws on an LLM output.
+    /// Run the LLM output through the FLUX policy VM.
     ///
-    /// # Arguments
+    /// `user_input` is the original prompt (not used by the policy today,
+    /// but kept for forward compatibility with policies that tokenize or
+    /// compute entropy across both input and output).
     ///
-    /// * `user_input` - The original user prompt or input.
-    /// * `llm_output` - The raw output from the LLM.
-    ///
-    /// Returns an EnforcementResult indicating whether the output is allowed.
-    pub fn enforce(&mut self, user_input: &str, llm_output: &str) -> EnforcementResult {
+    /// Returns an `EnforcementResult`. Allowed outputs carry the original
+    /// LLM text; blocked outputs carry the configured correction template.
+    pub fn enforce(&mut self, _user_input: &str, llm_output: &str) -> EnforcementResult {
         self.call_count += 1;
 
-        // TODO: Implement actual enforcement logic using FLUX VM.
-        // For now, we allow everything as a placeholder.
-        // In a real implementation, we would:
-        // 1. Prepare the input data for the FLUX VM (e.g., token counts, entropy).
-        // 2. Load the policy bytecode into the VM.
-        // 3. Execute the VM and check the result.
-        // 4. If the policy returns a violation, generate a correction.
-        // 5. Optionally log to audit.
+        let mut vm = Interpreter::new(&self.policy);
+        let verdict = match vm.execute() {
+            Ok(cycles) if (cycles as i64) <= self.budget => EnforcementResult {
+                allowed: true,
+                output: llm_output.to_string(),
+                violation: None,
+                cycles,
+            },
+            Ok(cycles) => {
+                let msg = format!("cycle budget exceeded: {} > {}", cycles, self.budget);
+                let correction = self
+                    .correction_template
+                    .replace("{reason}", &msg);
+                EnforcementResult::blocked(correction, msg, 1)
+            }
+            Err(FluxError::CycleBudgetExceeded(cycles)) => {
+                let msg = format!("cycle limit exceeded at {} cycles", cycles);
+                let correction = self.correction_template.replace("{reason}", &msg);
+                EnforcementResult::blocked(correction, msg, 2)
+            }
+            Err(e) => {
+                let msg = format!("policy VM error: {:?}", e);
+                let correction = self.correction_template.replace("{reason}", &msg);
+                EnforcementResult::blocked(correction, msg, 3)
+            }
+        };
 
-        EnforcementResult::allowed(llm_output.to_string())
+        if self.enable_audit {
+            if let Some(path) = &self.audit_path {
+                let _ = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                    .and_then(|mut f| {
+                        use std::io::Write;
+                        let line = serde_json::to_string(&verdict).unwrap_or_default();
+                        writeln!(f, "{}", line)
+                    });
+            }
+        }
+
+        verdict
     }
 }
 
@@ -166,26 +201,70 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_new_enforcer() {
-        let policy = vec![0, 1, 2, 3];
-        let enforcer = ConservationEnforcer::new(policy, 1000, None, false, None).unwrap();
+    fn new_stores_policy_and_budget() {
+        let enforcer =
+            ConservationEnforcer::new(vec![0, 1, 2, 3], 1000, None, false, None).unwrap();
         assert_eq!(enforcer.budget, 1000);
+        assert_eq!(enforcer.policy, vec![0, 1, 2, 3]);
         assert_eq!(enforcer.call_count(), 0);
     }
 
     #[test]
-    fn test_enforce_allows() {
-        let mut enforcer = ConservationEnforcer::new(vec![], 1000, None, false, None).unwrap();
-        let result = enforcer.enforce("Hello", "Hello world");
-        assert!(result.allowed);
-        assert_eq!(result.output, "Hello world");
-        assert!(result.violation.is_none());
+    fn call_count_increments_on_enforce() {
+        let mut enforcer =
+            ConservationEnforcer::new(vec![], 1000, None, false, None).unwrap();
+        enforcer.enforce("hi", "hello");
+        enforcer.enforce("hi", "world");
+        assert_eq!(enforcer.call_count(), 2);
     }
 
     #[test]
-    fn test_replenish_budget() {
-        let mut enforcer = ConservationEnforcer::new(vec![], 500, None, false, None).unwrap();
+    fn remaining_budget_tracks_state() {
+        let mut enforcer =
+            ConservationEnforcer::new(vec![], 500, None, false, None).unwrap();
+        assert_eq!(enforcer.remaining_budget(), 500);
         enforcer.replenish_budget(200);
         assert_eq!(enforcer.remaining_budget(), 700);
+        enforcer.reset_budget();
+        assert_eq!(enforcer.remaining_budget(), 500);
+    }
+
+    #[test]
+    #[should_panic(expected = "must be non-negative")]
+    fn replenish_panics_on_negative() {
+        let mut enforcer =
+            ConservationEnforcer::new(vec![], 100, None, false, None).unwrap();
+        enforcer.replenish_budget(-1);
+    }
+
+    #[test]
+    fn blocked_keeps_correction_template() {
+        let r = EnforcementResult::blocked(
+            "corrected".into(),
+            "out of budget".into(),
+            42,
+        );
+        assert!(!r.allowed);
+        assert_eq!(r.output, "corrected");
+        let v = r.violation.unwrap();
+        assert_eq!(v.reason, "out of budget");
+        assert_eq!(v.code, 42);
+    }
+
+    #[test]
+    fn allowed_has_no_violation() {
+        let r = EnforcementResult::allowed("keep".into());
+        assert!(r.allowed);
+        assert_eq!(r.output, "keep");
+        assert!(r.violation.is_none());
+    }
+
+    #[test]
+    fn empty_policy_with_high_budget_allows() {
+        let mut enforcer =
+            ConservationEnforcer::new(vec![], 10_000, None, false, None).unwrap();
+        let result = enforcer.enforce("Hello", "Hello world");
+        assert!(result.allowed, "empty policy should allow short output");
+        assert_eq!(result.output, "Hello world");
     }
 }
