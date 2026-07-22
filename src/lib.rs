@@ -1,7 +1,7 @@
 // conservation-enforcer-rs
 // A Rust implementation of the Conservation Enforcer for FLUX bytecode conservation-law enforcement.
 
-use fluxvm::vm::{VM, VMError};
+use fluxvm::{Interpreter, Error};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -52,7 +52,7 @@ pub struct Violation {
 /// The main enforcement class.
 pub struct ConservationEnforcer {
     /// The FLUX VM that runs the policy bytecode.
-    pub vm: VM,
+    pub vm: Interpreter,
     /// The policy bytecode to execute.
     pub policy: Vec<u8>,
     /// The conservation budget (e.g., maximum token count).
@@ -77,13 +77,15 @@ impl ConservationEnforcer {
         correction_template: Option<String>,
         enable_audit: bool,
         audit_path: Option<String>,
-    ) -> Self {
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut vm = Interpreter::new();
+        vm.load_bytecode(&policy)?;
         let template = correction_template.unwrap_or_else(|| {
             "⚠️ This response was blocked by a conservation law: {reason}. Please try again with a more conserved response."
                 .to_string()
         });
-        Self {
-            vm: VM::new(),
+        Ok(Self {
+            vm,
             policy,
             budget,
             initial_budget: budget,
@@ -91,7 +93,7 @@ impl ConservationEnforcer {
             enable_audit,
             audit_path,
             call_count: 0,
-        }
+        })
     }
 
     /// Load a policy from a binary file and create an enforcer.
@@ -101,14 +103,15 @@ impl ConservationEnforcer {
         correction_template: Option<String>,
         enable_audit: bool,
         audit_path: Option<String>,
-    ) -> Result<Self, std::io::Error> {
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let bytecode = std::fs::read(path)?;
-        Ok(Self::new(bytecode, budget, correction_template, enable_audit, audit_path))
+        Self::new(bytecode, budget, correction_template, enable_audit, audit_path)
     }
 
     /// Save the current policy bytecode to a file.
-    pub fn save_policy<P: AsRef<Path>>(&self, path: P) -> Result<(), std::io::Error> {
-        std::fs::write(path, &self.policy)
+    pub fn save_policy<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<dyn std::error::Error>> {
+        std::fs::write(path, &self.policy)?;
+        Ok(())
     }
 
     /// Get the number of times enforce has been called.
@@ -165,14 +168,14 @@ mod tests {
     #[test]
     fn test_new_enforcer() {
         let policy = vec![0, 1, 2, 3];
-        let enforcer = ConservationEnforcer::new(policy, 1000, None, false, None);
+        let enforcer = ConservationEnforcer::new(policy, 1000, None, false, None).unwrap();
         assert_eq!(enforcer.budget, 1000);
         assert_eq!(enforcer.call_count(), 0);
     }
 
     #[test]
     fn test_enforce_allows() {
-        let mut enforcer = ConservationEnforcer::new(vec![], 1000, None, false, None);
+        let mut enforcer = ConservationEnforcer::new(vec![], 1000, None, false, None).unwrap();
         let result = enforcer.enforce("Hello", "Hello world");
         assert!(result.allowed);
         assert_eq!(result.output, "Hello world");
@@ -181,7 +184,7 @@ mod tests {
 
     #[test]
     fn test_replenish_budget() {
-        let mut enforcer = ConservationEnforcer::new(vec![], 500, None, false, None);
+        let mut enforcer = ConservationEnforcer::new(vec![], 500, None, false, None).unwrap();
         enforcer.replenish_budget(200);
         assert_eq!(enforcer.remaining_budget(), 700);
     }
