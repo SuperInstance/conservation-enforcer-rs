@@ -1,7 +1,7 @@
 // conservation-enforcer-rs
 // A Rust implementation of the Conservation Enforcer for FLUX bytecode conservation-law enforcement.
 
-use fluxvm::{VM, VMError};
+use fluxvm::vm::{VM, VMError};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -79,8 +79,7 @@ impl ConservationEnforcer {
         audit_path: Option<String>,
     ) -> Self {
         let template = correction_template.unwrap_or_else(|| {
-            "⚠️ This response was blocked by a conservation law: {reason}. "
-                "Please try again with a more conserved response."
+            "⚠️ This response was blocked by a conservation law: {reason}. Please try again with a more conserved response."
                 .to_string()
         });
         Self {
