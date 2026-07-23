@@ -267,4 +267,16 @@ mod tests {
         assert!(result.allowed, "empty policy should allow short output");
         assert_eq!(result.output, "Hello world");
     }
+
+    #[test]
+    fn empty_policy_with_zero_budget_denies() {
+        let mut enforcer =
+            ConservationEnforcer::new(vec![], -1, None, false, None).unwrap();
+        let result = enforcer.enforce("Hello", "Hello world");
+        // Empty policy still executes the VM, which burns cycles (0 or more).
+        // With negative budget, any non-negative cycle count exceeds the budget.
+        assert!(!result.allowed, "negative budget should deny output");
+        assert!(result.output.contains("cycle"), "blocked output should mention cycle");
+        assert!(result.violation.is_some(), "denied result should have a violation");
+    }
 }
